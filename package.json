@@ -1,0 +1,7 @@
+{
+  "name": "science-lessons",
+  "private": true,
+  "description": "초등 과학 인터랙티브 수업 슬라이드",
+  "scripts": { "build": "node build.mjs" },
+  "devDependencies": { "three": "0.128.0" }
+}

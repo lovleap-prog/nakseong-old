@@ -1,0 +1,258 @@
+<div class="app">
+<header class="top">
+  <div class="unit"><span>6학년 2학기 과학 1단원</span><b>계절의 변화</b></div>
+  <nav class="steps" id="steps" aria-label="장 차례"></nav>
+  <button class="ghost" type="button" id="memoBtn" aria-pressed="false">선생님 메모</button>
+</header>
+
+<main class="deck" id="deck">
+
+<section class="slide cover" data-name="cover" data-label="표지">
+  <div class="txt">
+    <p class="kind">과학 10~33쪽 · 실험 관찰 6~21쪽</p>
+    <h1>여름은 왜 덥고 겨울은 왜 추울까요?</h1>
+    <ol class="goals">
+      <li>하루 동안 태양 고도, 그림자 길이, 기온의 관계를 찾아요.</li>
+      <li>계절에 따른 태양의 남중 고도와 낮의 길이의 관계를 알아봐요.</li>
+      <li>태양 고도와 태양 에너지양의 관계를 알아봐요.</li>
+      <li>계절의 변화가 생기는 까닭을 설명해요.</li>
+    </ol>
+    <div class="pick" id="pred">
+      <h3>내 생각 고르기: 여름이 겨울보다 더운 까닭은?</h3>
+      <div class="opts">
+        <button class="opt" type="button" data-v="near" aria-pressed="false">여름에는 지구가 태양에 더 가까워져서</button>
+        <button class="opt" type="button" data-v="high" aria-pressed="false">여름에는 태양이 더 높이 떠서</button>
+        <button class="opt" type="button" data-v="hot" aria-pressed="false">여름에는 태양이 더 뜨거워져서</button>
+      </div>
+      <p class="say" id="predSay" aria-live="polite">하나를 골라 보세요. 마지막 장에서 다시 확인해요.</p>
+    </div>
+    <div class="memo"><b>도입</b>답을 알려 주지 않고 손을 들어 인원만 확인합니다. «태양에 가까워져서»를 고르는 학생이 많습니다. 체험 4에서 지구와 태양 사이의 거리가 변하지 않아도 계절이 생기는 것을 보며 스스로 고치게 합니다.</div>
+  </div>
+  <svg viewBox="0 0 520 330" role="img" aria-label="계절에 따라 태양이 지나는 길. 여름에 가장 높고 겨울에 가장 낮다.">
+    <ellipse cx="260" cy="262" rx="236" ry="46" fill="var(--ground)" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M52 262 Q260 -190 468 262" fill="none" stroke="var(--hot)" stroke-width="4"/>
+    <path d="M84 262 Q260 -70 436 262" fill="none" stroke="var(--leaf)" stroke-width="4"/>
+    <path d="M124 262 Q260 50 396 262" fill="none" stroke="var(--cold)" stroke-width="4"/>
+    <circle cx="260" cy="36" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="260" cy="96" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="260" cy="156" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <g font-family="var(--f-body)" font-weight="700" font-size="17" fill="var(--ink)">
+      <text x="286" y="42">여름</text><text x="286" y="102">봄, 가을</text><text x="286" y="162">겨울</text>
+      <text x="34" y="300">동</text><text x="468" y="300">서</text><text x="252" y="326">남</text>
+    </g>
+    <line x1="260" y1="262" x2="260" y2="222" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  </svg>
+</section>
+
+<section class="slide lab" data-name="day" data-label="하루" hidden>
+  <div class="head">
+    <p class="kind">체험 1 · 과학 16~19쪽 · 실험 관찰 8~11쪽</p>
+    <h2>하루 동안 태양 고도, 그림자 길이, 기온의 관계는?</h2>
+    <div class="memo"><b>발문</b>«그림자가 가장 짧을 때 태양은 어디에 있나요?» «가장 더운 때는 태양이 가장 높은 때와 같은가요?» · 실제 측정(실험 관찰 8~9쪽)을 한 뒤 결과를 견주는 데 씁니다. 기온이 2시간쯤 늦게 가장 높아지는 것은 지표면이 데워지고 그 열로 공기가 데워지는 데 시간이 걸리기 때문입니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="태양 고도 측정기와 하늘의 태양. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="dayT">시각</label>
+      <input type="range" id="dayT" min="510" max="990" step="10" value="510">
+      <output id="dayOut" for="dayT"></output>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>태양 고도</span><b id="dayAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>그림자 길이</span><b id="dayLen">0</b><small>cm</small></div>
+      <div class="read" style="--c: var(--hot)"><span>기온</span><b id="dayTemp">0</b><small>°C</small></div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">태양 고도(°)</li><li style="--c: var(--shade)">그림자 길이(cm)</li><li style="--c: var(--hot)">기온(°C)</li></ul>
+      <canvas id="dayPlot" aria-label="시각에 따른 태양 고도, 그림자 길이, 기온 꺾은선그래프"></canvas>
+    </div>
+    <ol class="todo">
+      <li>시각 막대를 끌어 태양을 움직여요.</li>
+      <li>오전 9시 30분부터 오후 3시 30분까지 한 시간마다 일곱 번 기록해요.</li>
+      <li>그래프를 보고 아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="dayQ" hidden>
+      <p>태양 고도가 가장 높은 때는?</p>
+      <div class="opts row" data-q="alt"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+      <p>기온이 가장 높은 때는?</p>
+      <div class="opts row" data-q="temp"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양 고도가 높아질수록 그림자 길이는 짧아지고 기온은 높아져요. 태양 고도는 오후 12시 30분 무렵에 가장 높고(태양의 남중 고도), 기온은 오후 2시 30분 무렵에 가장 높아요.</span></div>
+    <p class="fine">서울, 9월 23일 무렵을 계산한 값 · 막대기 길이 10 cm · 기온은 이해를 돕기 위한 예</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="year" data-label="계절" hidden>
+  <div class="head">
+    <p class="kind">체험 2 · 과학 20~21쪽 · 실험 관찰 12~13쪽</p>
+    <h2>계절별 태양의 남중 고도와 낮의 길이의 관계는?</h2>
+    <div class="memo"><b>발문</b>«여름과 겨울의 오후 6시 모습은 어떻게 다른가요?» · 실험 관찰 12쪽 표를 한국천문연구원 자료로 채운 뒤, 이 화면의 값과 견주어 봅니다. 계절별로 같은 시각의 나무 그림자 길이를 예상하게 한 다음 달 막대를 움직여 확인합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="달마다 태양이 하늘을 지나는 길. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="clock" id="yearClock" hidden></p>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="yearM">달</label>
+      <input type="range" id="yearM" min="0" max="11" step="1" value="0">
+      <output id="yearOut" for="yearM"></output>
+      <button class="btn go" type="button" id="yearPlay">하루 보내기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>태양의 남중 고도</span><b id="yearAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--cold)"><span>낮의 길이</span><b id="yearLen" class="sm">0</b></div>
+      <div class="read" style="--c: var(--shade)"><span>남중할 때 그림자</span><b id="yearSh">0</b><small>cm</small></div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">태양의 남중 고도(°)</li><li style="--c: var(--cold)">낮의 길이(시간)</li></ul>
+      <canvas id="yearPlot" aria-label="달에 따른 태양의 남중 고도와 낮의 길이 꺾은선그래프"></canvas>
+    </div>
+    <ol class="todo">
+      <li>달 막대를 끌어 3월부터 다음 해 2월까지 모두 기록해요.</li>
+      <li>6월과 12월에 «하루 보내기»를 눌러 태양이 지나는 길을 견주어요.</li>
+      <li>그래프를 보고 아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="yearQ" hidden>
+      <p>태양의 남중 고도가 높아지면 낮의 길이는?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="long">길어져요</button><button class="opt" type="button" data-v="short">짧아져요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양의 남중 고도가 높아질수록 낮의 길이가 길어져요. 태양의 남중 고도가 높은 여름에는 낮의 길이가 길고, 남중 고도가 낮은 겨울에는 낮의 길이가 짧아요.</span></div>
+    <p class="fine">서울, 매월 21일을 계산한 값 · 막대기 길이 10 cm</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="light" data-label="에너지" hidden>
+  <div class="head">
+    <p class="kind">체험 3 · 과학 22~23쪽 · 실험 관찰 14~15쪽</p>
+    <h2>태양 고도와 태양 에너지양의 관계는?</h2>
+    <div class="memo"><b>발문</b>«무대 위 배우가 밝게 보이려면 조명을 어떻게 비춰야 할까요?» · 손전등은 태양, 손전등과 스마트 기기가 이루는 각은 태양 고도, 센서가 받는 에너지양은 태양 에너지양을 뜻합니다(실험 관찰 15쪽 선 잇기). 같은 빛이 넓게 퍼지면 센서 한 곳에 닿는 양이 줄어드는 것을 바닥의 밝은 부분 넓이로 확인하게 합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="손전등으로 스마트 기기와 막대를 비추는 모형실험. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값으로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="lightA">손전등 각</label>
+      <input type="range" id="lightA" min="20" max="90" step="1" value="55">
+      <output id="lightOut" for="lightA"></output>
+      <button class="btn" type="button" data-a="76"><span class="dot" style="--c: var(--hot)"></span>여름 남중 고도</button>
+      <button class="btn" type="button" data-a="29"><span class="dot" style="--c: var(--cold)"></span>겨울 남중 고도</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>손전등과 스마트 기기가 이루는 각</span><b id="lightAng">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>막대의 그림자 길이</span><b id="lightSh">0</b><small>cm</small></div>
+    </div>
+    <div class="quest">
+      <p>센서가 받는 빛의 세기 <span id="lightLux"></span></p>
+      <div class="meter"><i id="lightBar"></i></div>
+      <p>빛이 닿는 바닥의 넓이 <span id="lightArea"></span></p>
+      <div class="meter"><i id="areaBar" style="background: var(--cold)"></i></div>
+    </div>
+    <ol class="todo">
+      <li>손전등을 세워 막대의 그림자를 짧게 만들어요(각 70° 이상).</li>
+      <li>손전등을 눕혀 막대의 그림자를 길게 만들어요(각 30° 이하).</li>
+      <li>여름과 겨울의 남중 고도 단추를 모두 눌러 견주어요.</li>
+    </ol>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">손전등과 스마트 기기가 이루는 각이 클수록 센서가 받는 에너지양이 많아요. 이처럼 태양 고도가 높아질수록 일정한 면적의 지표면이 받는 태양 에너지양이 많아져요. 그래서 태양의 남중 고도가 높은 여름에 기온이 높아요.</span></div>
+    <p class="fine">막대 길이 5 cm · 빛의 세기는 손전등을 똑바로 세웠을 때를 100으로 한 값</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="orbit" data-label="공전" hidden>
+  <div class="head">
+    <p class="kind">체험 4 · 과학 24~27쪽 · 실험 관찰 16~17쪽</p>
+    <h2>계절의 변화가 생기는 까닭은?</h2>
+    <div class="memo"><b>발문</b>«자전축이 수직일 때와 기울어졌을 때, 가·나·다·라에서 그림자 길이는 어떻게 달랐나요?» · 지구본 모형실험과 같은 차례(가→나→다→라, 시계 반대 방향)입니다. 공전하는 동안 자전축이 항상 같은 방향을 향하는 것, 태양과의 거리는 변하지 않는데도 남중 고도가 달라지는 것을 짚어 줍니다. 남반구의 계절(과학 27쪽 2번)로 넓힐 수 있습니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view space">
+      <canvas class="gl" aria-label="태양 주위를 공전하는 지구. 끌어서 돌려 볼 수 있음"></canvas>
+      <div class="over">
+        <button class="btn" type="button" data-tilt="1" aria-pressed="true">자전축이 기울어진 경우</button>
+        <button class="btn" type="button" data-tilt="0" aria-pressed="false">자전축이 수직인 경우</button>
+      </div>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="orbitP">지구 위치</label>
+      <input type="range" id="orbitP" min="0" max="360" step="1" value="0">
+      <output id="orbitOut" for="orbitP"></output>
+      <button class="btn go" type="button" id="orbitPlay">공전시키기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>우리나라 태양의 남중 고도</span><b id="orbitAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>측정기 그림자 길이</span><b id="orbitSh">0</b><small>cm</small></div>
+      <div class="read" style="--c: var(--leaf)"><span>우리나라 계절</span><b id="orbitSeason">봄</b></div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">기울어진 경우</li><li style="--c: var(--cold)">수직인 경우</li></ul>
+      <canvas id="orbitPlot" aria-label="지구 위치에 따른 우리나라 태양의 남중 고도 그래프"></canvas>
+    </div>
+    <ol class="todo">
+      <li>자전축이 기울어진 채로 지구를 한 바퀴 공전시켜요.</li>
+      <li>자전축을 수직으로 세우고 다시 한 바퀴 공전시켜요.</li>
+      <li>그래프를 보고 아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="orbitQ" hidden>
+      <p>자전축이 수직인 채 공전하면 태양의 남중 고도는?</p>
+      <div class="opts row" data-q="up"><button class="opt" type="button" data-v="change">변해요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p>자전축이 기울어진 채 공전하면 태양의 남중 고도는?</p>
+      <div class="opts row" data-q="tilt"><button class="opt" type="button" data-v="change">변해요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">계절의 변화가 생기는 까닭은 지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 지구의 위치에 따라 태양의 남중 고도와 낮의 길이, 일정한 면적의 지표면이 받는 태양 에너지양이 달라져요.</span></div>
+    <p class="fine">태양과 지구의 크기, 거리는 실제와 다르게 나타냄 · 측정기 막대 길이 2 cm</p>
+  </div>
+</section>
+
+<section class="slide check" data-name="check" data-label="확인" hidden>
+  <div class="head">
+    <p class="kind">정리 · 과학 32~33쪽 · 실험 관찰 20~21쪽</p>
+    <h2>확인하기</h2>
+    <div class="memo"><b>마무리</b>표지에서 고른 생각을 다시 보고, 생각이 바뀐 학생에게 바뀐 까닭을 말하게 합니다. 다음 차시는 계절 축제 안내 자료 만들기(과학 28~29쪽)입니다.</div>
+  </div>
+  <div>
+    <ul class="ox" id="ox">
+      <li data-a="x"><p class="q">하루 동안 태양 고도가 높아질수록 그림자 길이는 길어진다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도가 높아질수록 그림자 길이는 짧아져요.</p></li>
+      <li data-a="o"><p class="q">하루 중 기온이 가장 높은 때는 태양 고도가 가장 높은 때보다 두 시간쯤 뒤이다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도는 오후 12시 30분 무렵, 기온은 오후 2시 30분 무렵에 가장 높아요.</p></li>
+      <li data-a="o"><p class="q">여름에는 태양의 남중 고도가 높고 낮의 길이가 길다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>겨울에는 태양의 남중 고도가 낮고 낮의 길이가 짧아요.</p></li>
+      <li data-a="x"><p class="q">태양 고도가 높아질수록 일정한 면적의 지표면이 받는 태양 에너지양은 적어진다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도가 높아질수록 태양 에너지양이 많아져요.</p></li>
+      <li data-a="x"><p class="q">지구의 자전축이 수직인 채 공전해도 계절의 변화가 생긴다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양의 남중 고도가 달라지지 않아 계절의 변화가 생기지 않아요.</p></li>
+    </ul>
+  </div>
+  <div class="sum">
+    <p class="score" id="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
+    <div class="card" style="--c: var(--ok)"><b>계절의 변화가 생기는 까닭</b><p>지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 여름에는 태양의 남중 고도가 높아 일정한 면적의 지표면이 받는 태양 에너지양이 많아요.</p></div>
+    <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>남반구에 있는 나라는 우리나라와 계절이 어떻게 다를까요?</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button type="button" id="prev">← 이전</button>
+  <span id="pos"></span>
+  <button type="button" id="next">다음 →</button>
+</footer>
+</div>

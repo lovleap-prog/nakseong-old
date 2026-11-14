@@ -121,6 +121,22 @@ td.wait { color: var(--line); }
 .meter { height: 22px; border-radius: 999px; background: var(--sky); overflow: hidden; border: 1px solid var(--line); }
 .meter i { display: block; height: 100%; width: 0; background: var(--sun); transition: width .15s; }
 
+/* 측정값 입력 */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.box { display: grid; gap: 12px; }
+.my { display: grid; gap: 8px; }
+.myhead, .myfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.myhead label { font-weight: 700; font-size: 15px; }
+.my input[type="date"], .my input[type="number"], .my input[type="time"] { min-height: 40px; padding: 2px 8px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); font-variant-numeric: tabular-nums; }
+.my input:focus { border-color: var(--ink); }
+#myStick { width: 5.5em; }
+.my td { padding: 3px 4px; border-bottom: 0; }
+.my td input { width: 100%; min-width: 4.6em; min-height: 34px; }
+.my th { padding: 4px 8px; }
+.chk { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; flex: 1; min-width: 0; }
+.chk input { width: 20px; height: 20px; accent-color: var(--sun); }
+.found { margin: 2px 0 0; padding-left: 1.2em; }
+
 /* 확인 */
 .check { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px 24px; align-content: start; }
 .check .head { grid-column: 1 / -1; }

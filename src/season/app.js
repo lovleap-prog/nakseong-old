@@ -268,64 +268,191 @@
 
   const parts = {};
 
-  /* ---------- 체험 1: 하루 동안 태양 고도, 그림자 길이, 기온 ---------- */
+  /* ---------- 체험 1: 하루 동안 태양 고도, 그림자 길이, 기온 ----------
+     예시 값(계산)과 우리 반 측정값(실험 관찰 9쪽 표) 두 가지로 본다. 측정값은 이 기기에만 저장된다. */
   parts.day = function (root) {
     const sky = makeSky($('canvas.gl', root));
     const slider = $('#dayT'), out = $('#dayOut'), cv = $('#dayPlot'), qbox = $('#dayQ'), say = $('.say', qbox);
-    const DEC = 0, MARKS = [570, 630, 690, 750, 810, 870, 930];
+    const MARKS = [570, 630, 690, 750, 810, 870, 930], KEY = 'season-day-my';
     const rec = new Set();
-    let prev = +slider.value, moved = false, okAlt = false, okTemp = false;
-    if (sky) sky.paths([{ dec: DEC, color: tok('sun'), opacity: 0.55 }]);
-    const calc = (min) => {
-      const h = min / 60, alt = altOf(h, DEC);
-      return { alt, len: 10 / Math.tan(alt * DEG), temp: 23.5 + 4.5 * Math.cos((h - 14.5) * 15 * DEG) };
+    let prev = +slider.value, moved = false, okAlt = false, okTemp = false, mode = 'ex';
+    const my = { date: '', stick: '10', overlay: true, rows: MARKS.map((m) => ({ t: toHM(m), a: '', l: '', c: '' })) };
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(KEY) || 'null');
+      if (saved && Array.isArray(saved.rows)) Object.assign(my, saved);
+    } catch (e) { /* 저장소를 못 쓰는 기기 */ }
+    const save = () => { try { window.localStorage.setItem(KEY, JSON.stringify(my)); } catch (e) { /* 그대로 둔다 */ } };
+
+    function toHM(min) { return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); }
+    function toMin(hm) { const m = /^(\d{1,2}):(\d{2})$/.exec(hm || ''); return m ? +m[1] * 60 + +m[2] : NaN; }
+    const num = (v) => (v === '' || v == null || isNaN(+v) ? NaN : +v);
+    const stickLen = () => (num(my.stick) > 0 ? num(my.stick) : 10);
+    // 측정한 날짜의 태양 위치(날짜가 없으면 9월 23일 무렵)
+    function myDec() {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(my.date);
+      if (!m) return 0;
+      const n = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(+m[1], 0, 0)) / 86400000);
+      return 23.44 * Math.sin(2 * Math.PI * (n - 80) / 365);
+    }
+    const dec = () => (mode === 'my' ? myDec() : 0);
+    const calc = (min, d, stick) => {
+      const h = min / 60, alt = altOf(h, d);
+      return { alt, len: alt > 1 ? stick / Math.tan(alt * DEG) : NaN, temp: 23.5 + 4.5 * Math.cos((h - 14.5) * 15 * DEG) };
     };
+    function nice(lo, hi, minStep) {
+      const steps = [1, 2, 2.5, 5, 10, 20, 25, 50, 100];
+      for (let i = 0; i < steps.length; i++) {
+        const st = steps[i];
+        if (st < minStep) continue;
+        const a = Math.floor(lo / st) * st;
+        if (a + 4 * st >= hi) return [a, st];
+      }
+      return [0, 100];
+    }
+    const fmt = (v) => String(+v.toFixed(1));
+
     function draw() {
       plot(cv, (g, w, h) => {
         const L = 62, Rm = 38, Tm = 10, B = 26, x0 = L, x1 = w - Rm, y0 = h - B, y1 = Tm;
-        const X = (m) => x0 + (m - 540) / (960 - 540) * (x1 - x0);
+        let xa = 540, xb = 960, ticks = MARKS, sLen = [0, 5], sAlt = [20, 10], sTemp = [20, 3];
+        let dLen = [], dAlt = [], dTemp = [], cLen = [], cAlt = [];
+        if (mode === 'ex') {
+          const got = MARKS.filter((m) => rec.has(m)).map((m) => [m, calc(m, 0, 10)]);
+          dLen = got.map((p) => [p[0], p[1].len]); dAlt = got.map((p) => [p[0], p[1].alt]); dTemp = got.map((p) => [p[0], p[1].temp]);
+        } else {
+          const rows = my.rows.map((r) => ({ m: toMin(r.t), a: num(r.a), l: num(r.l), c: num(r.c) })).filter((r) => !isNaN(r.m)).sort((p, q) => p.m - q.m);
+          if (rows.length) { xa = rows[0].m - 30; xb = rows[rows.length - 1].m + 30; ticks = rows.map((r) => r.m); }
+          dAlt = rows.filter((r) => !isNaN(r.a)).map((r) => [r.m, r.a]);
+          dLen = rows.filter((r) => !isNaN(r.l)).map((r) => [r.m, r.l]);
+          dTemp = rows.filter((r) => !isNaN(r.c)).map((r) => [r.m, r.c]);
+          if (my.overlay) rows.forEach((r) => { const c = calc(r.m, myDec(), stickLen()); if (c.alt > 1) { cAlt.push([r.m, c.alt]); cLen.push([r.m, c.len]); } });
+          const range = (arrs, fb, minStep) => {
+            const vs = [].concat.apply([], arrs).map((p) => p[1]);
+            return vs.length ? nice(Math.min.apply(null, vs), Math.max.apply(null, vs), minStep) : fb;
+          };
+          sAlt = range([dAlt, cAlt], sAlt, 5); sLen = range([dLen, cLen], sLen, 1); sTemp = range([dTemp], sTemp, 1);
+          if (sLen[0] > 0 && sLen[0] <= sLen[1]) sLen = nice(0, sLen[0] + 4 * sLen[1], sLen[1]);
+        }
+        const X = (m) => x0 + (m - xa) / (xb - xa) * (x1 - x0);
         const Y = (t) => y0 + t * (y1 - y0);
+        const N = (sc) => (v) => Y((v - sc[0]) / (4 * sc[1]));
         gridY(g, x0, x1, [0, 0.25, 0.5, 0.75, 1].map(Y));
         g.textBaseline = 'middle';
         [0, 1, 2, 3, 4].forEach((i) => {
           const y = Y(i / 4);
-          g.textAlign = 'right'; g.fillStyle = tok('shade'); g.fillText(String(i * 5), x0 - 34, y);
-          g.fillStyle = tok('sun'); g.fillText(String(20 + i * 10), x0 - 6, y);
-          g.textAlign = 'left'; g.fillStyle = tok('hot'); g.fillText(String(20 + i * 3), x1 + 6, y);
+          g.textAlign = 'right'; g.fillStyle = tok('shade'); g.fillText(fmt(sLen[0] + i * sLen[1]), x0 - 34, y);
+          g.fillStyle = tok('sun'); g.fillText(fmt(sAlt[0] + i * sAlt[1]), x0 - 6, y);
+          g.textAlign = 'left'; g.fillStyle = tok('hot'); g.fillText(fmt(sTemp[0] + i * sTemp[1]), x1 + 6, y);
         });
         g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = tok('ink-2');
-        MARKS.forEach((m) => g.fillText(Math.floor(m / 60) + ':30', X(m), y0 + 6));
+        let lastX = -99;
+        ticks.forEach((m) => { const x = X(m); if (x - lastX < 34) return; lastX = x; g.fillText(Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'), x, y0 + 6); });
         const cur = +slider.value;
-        if (cur >= 540 && cur <= 960) {
+        if (cur >= xa && cur <= xb) {
           g.strokeStyle = tok('ink'); g.lineWidth = 1; g.setLineDash([4, 4]);
           g.beginPath(); g.moveTo(X(cur), y0); g.lineTo(X(cur), y1); g.stroke(); g.setLineDash([]);
         }
-        const got = MARKS.filter((m) => rec.has(m)).map((m) => [m, calc(m)]);
-        series(g, got.map((p) => [X(p[0]), Y(p[1].len / 20)]), tok('shade'));
-        series(g, got.map((p) => [X(p[0]), Y((p[1].alt - 20) / 40)]), tok('sun'));
-        series(g, got.map((p) => [X(p[0]), Y((p[1].temp - 20) / 12)]), tok('hot'));
+        // 계산한 값(견주기용)은 점선
+        [[cLen, sLen, tok('shade')], [cAlt, sAlt, tok('sun')]].forEach((c) => {
+          if (c[0].length < 2) return;
+          g.strokeStyle = c[2]; g.lineWidth = 1.5; g.setLineDash([5, 5]); g.globalAlpha = 0.7;
+          g.beginPath(); c[0].forEach((p, i) => { const x = X(p[0]), y = N(c[1])(p[1]); if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke();
+          g.setLineDash([]); g.globalAlpha = 1;
+        });
+        series(g, dLen.map((p) => [X(p[0]), N(sLen)(p[1])]), tok('shade'));
+        series(g, dAlt.map((p) => [X(p[0]), N(sAlt)(p[1])]), tok('sun'));
+        series(g, dTemp.map((p) => [X(p[0]), N(sTemp)(p[1])]), tok('hot'));
       });
     }
+
+    // 우리 반 측정값에서 찾은 것
+    function summary() {
+      const rows = my.rows.map((r) => ({ m: toMin(r.t), a: num(r.a), l: num(r.l), c: num(r.c) })).filter((r) => !isNaN(r.m));
+      const pick = (k, max) => {
+        const ok = rows.filter((r) => !isNaN(r[k]));
+        if (ok.length < 2) return null;
+        return ok.reduce((b, r) => ((max ? r[k] > b[k] : r[k] < b[k]) ? r : b));
+      };
+      const a = pick('a', true), l = pick('l', false), c = pick('c', true);
+      const line1 = (name, r, unit, k) => (r ? name + ': ' + clock(r.m) + ' (' + fmt(r[k]) + unit + ')' : name + ': 두 번 넘게 측정하면 나와요');
+      $('#mySum').innerHTML = [
+        line1('태양 고도가 가장 높은 때', a, '°', 'a'),
+        line1('그림자 길이가 가장 짧은 때', l, ' cm', 'l'),
+        line1('기온이 가장 높은 때', c, ' °C', 'c'),
+      ].map((t) => '<li>' + t + '</li>').join('');
+    }
+
     function upd() {
       const m = +slider.value, lo = Math.min(prev, m), hi = Math.max(prev, m);
-      MARKS.forEach((k) => { if (k >= lo && k <= hi && moved) rec.add(k); });
+      if (mode === 'ex') MARKS.forEach((k) => { if (k >= lo && k <= hi && moved) rec.add(k); });
       prev = m;
-      const c = calc(m);
+      const c = calc(m, dec(), mode === 'my' ? stickLen() : 10);
       out.textContent = clock(m);
       $('#dayAlt').textContent = Math.round(c.alt);
-      $('#dayLen').textContent = c.len.toFixed(1);
+      $('#dayLen').textContent = isNaN(c.len) ? '-' : c.len.toFixed(1);
       $('#dayTemp').textContent = c.temp.toFixed(1);
-      if (sky) sky.set(m / 60, DEC);
+      if (sky) sky.set(m / 60, dec());
       const all = rec.size === MARKS.length;
       qbox.hidden = !all;
-      todo(root, okAlt && okTemp ? 3 : all ? 2 : moved ? 1 : 0);
+      todo($('#dayExBox'), okAlt && okTemp ? 3 : all ? 2 : moved ? 1 : 0);
       draw();
     }
+    function setMode(mo) {
+      mode = mo;
+      $$('button[data-mode]', root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mo)));
+      $('#dayReads').hidden = mo !== 'ex'; $('#dayExBox').hidden = mo !== 'ex';
+      $('#dayMy').hidden = mo !== 'my'; $('#dayMyBox').hidden = mo !== 'my';
+      $('#dayFine').textContent = mo === 'ex'
+        ? '서울, 9월 23일 무렵을 계산한 값 · 막대기 길이 10 cm · 기온은 이해를 돕기 위한 예'
+        : '측정값은 이 기기에만 저장돼요 · 점선과 입체 화면은 서울에서 그 날짜를 계산한 값';
+      if (sky) sky.paths([{ dec: dec(), color: tok('sun'), opacity: 0.55 }]);
+      upd();
+    }
+
+    // 측정값 표
+    const tbody = $('#myTable tbody');
+    function rowsHtml() {
+      tbody.innerHTML = my.rows.map((r, i) =>
+        '<tr><td><input type="time" step="600" id="my-t-' + i + '" data-i="' + i + '" data-k="t" value="' + r.t + '" aria-label="' + (i + 1) + '번째 측정 시각"></td>' +
+        ['a', 'l', 'c'].map((k) => '<td><input type="number" inputmode="decimal" step="0.1" id="my-' + k + '-' + i + '" data-i="' + i + '" data-k="' + k + '" value="' + r[k] + '" aria-label="' + (i + 1) + '번째 ' + { a: '태양 고도', l: '그림자 길이', c: '기온' }[k] + '"></td>').join('') + '</tr>').join('');
+    }
+    tbody.addEventListener('input', (e) => {
+      const el = e.target, i = +el.dataset.i;
+      if (!my.rows[i]) return;
+      my.rows[i][el.dataset.k] = el.value;
+      save(); summary(); draw();
+    });
+    // 줄을 고르면 입체 화면의 태양도 그 시각으로 간다
+    tbody.addEventListener('focusin', (e) => {
+      const r = my.rows[+e.target.dataset.i], m = r ? toMin(r.t) : NaN;
+      if (isNaN(m)) return;
+      slider.value = clamp(m, +slider.min, +slider.max); prev = +slider.value; upd();
+    });
+    $('#myDate').value = my.date; $('#myStick').value = my.stick; $('#myEx').checked = !!my.overlay;
+    $('#myDate').addEventListener('input', (e) => { my.date = e.target.value; save(); setMode(mode); });
+    $('#myStick').addEventListener('input', (e) => { my.stick = e.target.value; save(); upd(); });
+    $('#myEx').addEventListener('change', (e) => { my.overlay = e.target.checked; save(); draw(); });
+    $('#myAdd').addEventListener('click', () => {
+      if (my.rows.length >= 12) return;
+      const last = toMin(my.rows[my.rows.length - 1].t);
+      my.rows.push({ t: isNaN(last) || last + 60 > 1439 ? '' : toHM(last + 60), a: '', l: '', c: '' });
+      save(); rowsHtml(); draw();
+    });
+    const clearBtn = $('#myClear');
+    let armed = 0;
+    clearBtn.addEventListener('click', () => {
+      if (!armed) { clearBtn.textContent = '한 번 더 누르면 지워요'; armed = setTimeout(() => { armed = 0; clearBtn.textContent = '모두 지우기'; }, 3000); return; }
+      clearTimeout(armed); armed = 0; clearBtn.textContent = '모두 지우기';
+      my.rows = MARKS.map((m) => ({ t: toHM(m), a: '', l: '', c: '' }));
+      save(); rowsHtml(); summary(); draw();
+    });
+    $$('button[data-mode]', root).forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
     slider.addEventListener('input', () => { moved = true; upd(); });
-    const answered = () => { say.textContent = okAlt && okTemp ? '맞았어요. 두 때는 두 시간쯤 차이가 나요.' : say.textContent; upd(); };
+    const answered = () => { if (okAlt && okTemp) say.textContent = '맞았어요. 두 때는 두 시간쯤 차이가 나요.'; upd(); };
     ask($('[data-q="alt"]', qbox), '750', (ok) => { okAlt = okAlt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
     ask($('[data-q="temp"]', qbox), '870', (ok) => { okTemp = okTemp || ok; say.textContent = ok ? '맞았어요.' : '빨간색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
-    upd();
+    rowsHtml(); summary(); setMode('ex');
     return { setActive(on) { if (sky) sky.setActive(on); if (on) upd(); }, refresh: draw };
   };
 

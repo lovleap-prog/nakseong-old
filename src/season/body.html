@@ -48,7 +48,7 @@
   <div class="head">
     <p class="kind">체험 1 · 과학 16~19쪽 · 실험 관찰 8~11쪽</p>
     <h2>하루 동안 태양 고도, 그림자 길이, 기온의 관계는?</h2>
-    <div class="memo"><b>발문</b>«그림자가 가장 짧을 때 태양은 어디에 있나요?» «가장 더운 때는 태양이 가장 높은 때와 같은가요?» · 실제 측정(실험 관찰 8~9쪽)을 한 뒤 결과를 견주는 데 씁니다. 기온이 2시간쯤 늦게 가장 높아지는 것은 지표면이 데워지고 그 열로 공기가 데워지는 데 시간이 걸리기 때문입니다.</div>
+    <div class="memo"><b>발문</b>«그림자가 가장 짧을 때 태양은 어디에 있나요?» «가장 더운 때는 태양이 가장 높은 때와 같은가요?» · 실제 측정(실험 관찰 8~9쪽)을 한 뒤 «우리 반 측정값»에 표를 옮겨 적으면 그래프가 그려집니다. 측정한 날짜와 막대기 길이를 넣으면 계산한 값(점선)과 견줄 수 있습니다. 기온이 2시간쯤 늦게 가장 높아지는 것은 지표면이 데워지고 그 열로 공기가 데워지는 데 시간이 걸리기 때문입니다.</div>
   </div>
   <div class="stage">
     <div class="view">
@@ -63,29 +63,56 @@
     </div>
   </div>
   <div class="side">
-    <div class="reads">
+    <div class="tabs">
+      <button class="btn" type="button" data-mode="ex" aria-pressed="true">예시 값</button>
+      <button class="btn" type="button" data-mode="my" aria-pressed="false">우리 반 측정값</button>
+    </div>
+    <div class="reads" id="dayReads">
       <div class="read" style="--c: var(--sun)"><span>태양 고도</span><b id="dayAlt">0</b><small>°</small></div>
       <div class="read" style="--c: var(--shade)"><span>그림자 길이</span><b id="dayLen">0</b><small>cm</small></div>
       <div class="read" style="--c: var(--hot)"><span>기온</span><b id="dayTemp">0</b><small>°C</small></div>
+    </div>
+    <div class="my" id="dayMy" hidden>
+      <div class="myhead">
+        <label for="myDate">측정한 날짜</label><input type="date" id="myDate">
+        <label for="myStick">막대기 길이(cm)</label><input type="number" id="myStick" inputmode="decimal" min="1" max="100" step="0.1">
+      </div>
+      <div class="tablewrap">
+        <table id="myTable">
+          <thead><tr><th>측정 시각</th><th>태양 고도(°)</th><th>그림자 길이(cm)</th><th>기온(°C)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="myfoot">
+        <button class="btn" type="button" id="myAdd">줄 추가</button>
+        <label class="chk"><input type="checkbox" id="myEx"> 계산한 값 함께 보기(점선)</label>
+        <button class="btn" type="button" id="myClear">모두 지우기</button>
+      </div>
     </div>
     <div class="plot">
       <ul class="legend"><li style="--c: var(--sun)">태양 고도(°)</li><li style="--c: var(--shade)">그림자 길이(cm)</li><li style="--c: var(--hot)">기온(°C)</li></ul>
       <canvas id="dayPlot" aria-label="시각에 따른 태양 고도, 그림자 길이, 기온 꺾은선그래프"></canvas>
     </div>
-    <ol class="todo">
-      <li>시각 막대를 끌어 태양을 움직여요.</li>
-      <li>오전 9시 30분부터 오후 3시 30분까지 한 시간마다 일곱 번 기록해요.</li>
-      <li>그래프를 보고 아래 물음에 답해요.</li>
-    </ol>
-    <div class="quest" id="dayQ" hidden>
-      <p>태양 고도가 가장 높은 때는?</p>
-      <div class="opts row" data-q="alt"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
-      <p>기온이 가장 높은 때는?</p>
-      <div class="opts row" data-q="temp"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
-      <p class="say" aria-live="polite"></p>
+    <div class="box" id="dayExBox">
+      <ol class="todo">
+        <li>시각 막대를 끌어 태양을 움직여요.</li>
+        <li>오전 9시 30분부터 오후 3시 30분까지 한 시간마다 일곱 번 기록해요.</li>
+        <li>그래프를 보고 아래 물음에 답해요.</li>
+      </ol>
+      <div class="quest" id="dayQ" hidden>
+        <p>태양 고도가 가장 높은 때는?</p>
+        <div class="opts row" data-q="alt"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+        <p>기온이 가장 높은 때는?</p>
+        <div class="opts row" data-q="temp"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+        <p class="say" aria-live="polite"></p>
+      </div>
+      <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양 고도가 높아질수록 그림자 길이는 짧아지고 기온은 높아져요. 태양 고도는 오후 12시 30분 무렵에 가장 높고(태양의 남중 고도), 기온은 오후 2시 30분 무렵에 가장 높아요.</span></div>
     </div>
-    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양 고도가 높아질수록 그림자 길이는 짧아지고 기온은 높아져요. 태양 고도는 오후 12시 30분 무렵에 가장 높고(태양의 남중 고도), 기온은 오후 2시 30분 무렵에 가장 높아요.</span></div>
-    <p class="fine">서울, 9월 23일 무렵을 계산한 값 · 막대기 길이 10 cm · 기온은 이해를 돕기 위한 예</p>
+    <div class="box" id="dayMyBox" hidden>
+      <div class="card" style="--c: var(--sun)"><b>우리 반 측정에서 찾은 것</b><ul class="found" id="mySum"></ul></div>
+      <div class="card" style="--c: var(--ok)"><b>정리해요 (실험 관찰 9쪽)</b><p>하루 동안 태양 고도, 그림자 길이, 기온은 어떻게 달라졌나요? 그래프의 모양을 보고 써 봅시다.</p></div>
+    </div>
+    <p class="fine" id="dayFine"></p>
   </div>
 </section>
 

@@ -782,6 +782,7 @@
   const slides = $$('.slide'), names = slides.map((s) => s.dataset.name), live = {};
   const steps = $('#steps'), prevB = $('#prev'), nextB = $('#next'), posEl = $('#pos');
   let idx = -1;
+  let onGo = function () {};
   slides.forEach((s, i) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -804,6 +805,7 @@
     if (!live[n] && parts[n]) live[n] = parts[n](slides[i]);
     if (live[n]) live[n].setActive(true);
     if (push) { try { window.location.hash = n; } catch (e) { /* 미리 보기 */ } }
+    onGo(n);
   }
   prevB.addEventListener('click', () => go(idx - 1, true));
   nextB.addEventListener('click', () => go(idx + 1, true));
@@ -822,4 +824,50 @@
     memoBtn.setAttribute('aria-pressed', String(on));
   });
   go(fromHash(), false);
+
+  /* ---------- 선생님 따라 넘기기 ----------
+     진행하는 기기가 지금 장을 공유 저장소 문서(live/state)에 적고, 다른 기기는 그 문서를 지켜보다 따라 넘긴다.
+     공유 저장소는 로그인한 사람에게만 열리므로, 없으면(파일로 열기·로그인 안 함) 단추가 나타나지 않는다. */
+  (async function follow() {
+    if (!window.claude || !window.claude.use) return;
+    let db = null, user = null;
+    try { db = await window.claude.use('db'); user = await window.claude.use('user'); } catch (e) { db = null; }
+    if (!db) return;
+    let canLead = false;
+    try { canLead = user ? await user.canEdit() : false; } catch (e) { canLead = false; }
+    const ME = Math.random().toString(36).slice(2, 10);
+    const ref = db.doc('live/state'), leadBtn = $('#leadBtn'), followBtn = $('#followBtn');
+    let leading = false, following = true, remote = null, busy = Promise.resolve();
+    const write = (data) => { busy = busy.then(() => ref.set(data)).catch(() => {}); };
+    function paint() {
+      leadBtn.hidden = !canLead;
+      leadBtn.setAttribute('aria-pressed', String(leading));
+      leadBtn.textContent = leading ? '수업 진행 중 · 끝내기' : '수업 진행';
+      const live = !!(remote && remote.on && !leading);
+      followBtn.hidden = !live;
+      followBtn.setAttribute('aria-pressed', String(following));
+      followBtn.textContent = following ? '선생님 따라가는 중' : '따로 보는 중 · 따라가기';
+    }
+    onGo = (n) => { if (leading) write({ on: true, slide: n, by: ME }); };
+    leadBtn.addEventListener('click', () => {
+      leading = !leading;
+      write(leading ? { on: true, slide: names[idx], by: ME } : { on: false, slide: names[idx], by: ME });
+      paint();
+    });
+    followBtn.addEventListener('click', () => {
+      following = !following;
+      if (following && remote && remote.on) go(Math.max(0, names.indexOf(remote.slide)), false);
+      paint();
+    });
+    ref.onSnapshot((snap) => {
+      const d = snap.exists ? snap.data() : null;
+      remote = d && typeof d.slide === 'string' ? d : null;
+      if (remote && remote.on && remote.by !== ME) {
+        leading = false;                                   // 다른 기기가 진행을 맡았다
+        if (following && names.indexOf(remote.slide) >= 0) go(names.indexOf(remote.slide), false);
+      }
+      paint();
+    }, () => { leadBtn.hidden = true; followBtn.hidden = true; });
+    paint();
+  })();
 })();

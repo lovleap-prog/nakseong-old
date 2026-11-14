@@ -1,0 +1,14 @@
+
+/* 전기의 이용: 평면 무대와 습관 고르기 */
+.view.flat { background: var(--paper); }
+.view canvas.flat2d { cursor: default; touch-action: auto; }
+.ctrl output { min-width: 0; text-align: left; flex: 1; }
+.tablewrap .mini { min-height: 34px; padding: 0 10px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); font-weight: 700; font-size: 14px; }
+.tablewrap .mini[aria-pressed="true"] { border-color: var(--ink); background: var(--sun-soft); }
+.tablewrap td.yes { color: var(--ok); font-weight: 700; }
+.tablewrap td.no { color: var(--ink-2); font-weight: 700; }
+.habits li { grid-template-columns: minmax(0, 1fr); }
+.habits .bt { flex-wrap: wrap; }
+.habits .bt button { width: auto; height: auto; min-height: 44px; flex: 1 1 200px; padding: 8px 12px; border-radius: 10px; font: 500 16px/1.4 var(--f-body); text-align: left; }
+.habits .bt button.right { color: var(--paper); font-weight: 700; }
+.habits .tag { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 999px; background: var(--sun-soft); font-size: 13px; font-weight: 700; }

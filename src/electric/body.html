@@ -1,0 +1,293 @@
+<div class="app">
+<header class="top">
+  <div class="unit"><span>6학년 2학기 과학 3단원</span><b>전기의 이용</b></div>
+  <nav class="steps" id="steps" aria-label="장 차례"></nav>
+  <button class="ghost" type="button" id="followBtn" aria-pressed="true" hidden>선생님 따라가는 중</button>
+  <button class="ghost" type="button" id="leadBtn" aria-pressed="false" hidden>수업 진행</button>
+  <button class="ghost" type="button" id="memoBtn" aria-pressed="false">선생님 메모</button>
+</header>
+
+<main class="deck" id="deck">
+
+<section class="slide cover" data-name="cover" data-label="표지">
+  <div class="txt">
+    <p class="kind">과학 56~75쪽 · 실험 관찰 36~49쪽</p>
+    <h1>전구에 불을 켜려면 어떻게 해야 할까요?</h1>
+    <ol class="goals">
+      <li>전구에 불이 켜지는 전기 회로의 특징을 찾아요.</li>
+      <li>전지 한 개와 전지 두 개를 직렬연결한 전기 회로를 비교해요.</li>
+      <li>전자석의 성질을 알아보고, 전자석을 사용하는 예를 찾아요.</li>
+      <li>전기를 효율적이고 안전하게 사용하는 방법을 알아봐요.</li>
+    </ol>
+    <div class="pick" id="pred">
+      <h3>내 생각 고르기: 손전등의 스위치를 누르면 불이 켜지는 까닭은?</h3>
+      <div class="opts">
+        <button class="opt" type="button" data-v="make" aria-pressed="false">스위치가 전기를 만들어 내서</button>
+        <button class="opt" type="button" data-v="join" aria-pressed="false">끊어져 있던 전기 회로가 연결되어서</button>
+        <button class="opt" type="button" data-v="warm" aria-pressed="false">스위치가 전구를 뜨겁게 해서</button>
+      </div>
+      <p class="say" id="predSay" aria-live="polite">하나를 골라 보세요. 마지막 장에서 다시 확인해요.</p>
+    </div>
+    <div class="memo"><b>도입</b>손전등을 실제로 켜 보이며 묻습니다. 답은 알려 주지 않고 체험 1에서 스위치를 닫았을 때 전기 회로가 이어지는 것을 보고 스스로 확인하게 합니다.</div>
+  </div>
+  <svg viewBox="0 0 520 330" role="img" aria-label="전지, 전구, 스위치를 전선으로 연결한 전기 회로">
+    <path d="M150 90 C90 150 110 250 220 262" fill="none" stroke="var(--hot)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M300 262 C400 262 430 190 410 120" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M230 82 C270 50 320 60 352 96" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+    <rect x="130" y="62" width="110" height="40" rx="8" fill="var(--cold)" stroke="var(--ink)" stroke-width="3"/>
+    <rect x="122" y="74" width="10" height="16" rx="2" fill="var(--ink)"/>
+    <circle cx="260" cy="232" r="46" fill="var(--sun-soft)"/>
+    <circle cx="260" cy="232" r="26" fill="var(--sun)" stroke="var(--ink)" stroke-width="3"/>
+    <rect x="212" y="254" width="96" height="22" rx="6" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/>
+    <rect x="340" y="96" width="100" height="24" rx="6" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/>
+    <line x1="356" y1="100" x2="426" y2="100" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+    <g font-family="var(--f-body)" font-weight="700" font-size="17" fill="var(--ink)">
+      <text x="160" y="52">전지</text><text x="372" y="84">스위치</text><text x="242" y="302">전구</text>
+    </g>
+  </svg>
+</section>
+
+<section class="slide lab" data-name="circuit" data-label="전기 회로" hidden>
+  <div class="head">
+    <p class="kind">체험 1 · 과학 60~61쪽 · 실험 관찰 36~37쪽</p>
+    <h2>전구에 불을 켜려면 어떻게 해야 할까?</h2>
+    <div class="memo"><b>발문</b>«가와 라는 전선이 두 줄씩인데 왜 불이 켜지지 않을까요?» «다는 전선이 세 줄인데 왜 안 켜질까요?» · 전기 회로 카드 가~라는 실험 관찰 36쪽과 같은 연결입니다. 예상을 먼저 표시하게 한 뒤 스위치를 닫아 확인합니다. 실험 2에서는 스위치 자리에 막대를 넣어 도체와 부도체를 구별합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view flat">
+      <canvas class="flat2d" id="cirCv" aria-label="전지, 전구, 스위치를 전선으로 연결한 전기 회로"></canvas>
+      <div class="over" id="cirCards">
+        <button class="btn" type="button" data-card="ga" aria-pressed="true">가</button>
+        <button class="btn" type="button" data-card="na" aria-pressed="false">나</button>
+        <button class="btn" type="button" data-card="da" aria-pressed="false">다</button>
+        <button class="btn" type="button" data-card="ra" aria-pressed="false">라</button>
+      </div>
+      <div class="over" id="cirRods" hidden>
+        <button class="btn" type="button" data-rod="plastic" aria-pressed="false">플라스틱 막대</button>
+        <button class="btn" type="button" data-rod="rubber" aria-pressed="false">고무 막대</button>
+        <button class="btn" type="button" data-rod="metal" aria-pressed="false">금속 막대</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button class="btn" type="button" data-exp="1" aria-pressed="true">실험 1 전구에 불 켜기</button>
+      <button class="btn" type="button" data-exp="2" aria-pressed="false">실험 2 전기가 흐르는 물질</button>
+      <button class="btn go" type="button" id="cirSw">스위치 닫기</button>
+      <output id="cirOut" aria-live="polite"></output>
+    </div>
+  </div>
+  <div class="side">
+    <div class="box" id="cirBox1">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>전기 회로 카드</th><th>내 예상</th><th>스위치를 닫았을 때</th></tr></thead>
+          <tbody id="cirTable"></tbody>
+        </table>
+      </div>
+      <ol class="todo">
+        <li>네 카드마다 전구에 불이 켜질지 예상해요.</li>
+        <li>카드마다 스위치를 닫아 확인해요.</li>
+        <li>아래 물음에 답해요.</li>
+      </ol>
+      <div class="quest" id="cirQ" hidden>
+        <p>전구에 불이 켜지는 전기 회로에서 전기 부품은?</p>
+        <div class="opts row" data-q="a"><button class="opt" type="button" data-v="whole">끊어진 곳 없이 연결되어 있어요</button><button class="opt" type="button" data-v="cut">끊어진 부분이 있어요</button></div>
+        <p>전기 부품은 전지의 어디에 연결되어 있나요?</p>
+        <div class="opts row" data-q="b"><button class="opt" type="button" data-v="plus">(+)극에만</button><button class="opt" type="button" data-v="minus">(-)극에만</button><button class="opt" type="button" data-v="both">(+)극부터 (-)극까지</button></div>
+        <p class="say" aria-live="polite"></p>
+      </div>
+      <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전지, 전구, 전선과 같은 전기 부품을 서로 연결해 전기가 흐를 수 있도록 한 것을 전기 회로라고 해요. 전구에 불을 켜려면 전지의 (+)극부터 (-)극까지 끊어진 곳 없이 연결해야 해요.</span></div>
+    </div>
+    <div class="box" id="cirBox2" hidden>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>스위치 대신 연결한 것</th><th>전구에 불이</th></tr></thead>
+          <tbody id="rodTable"></tbody>
+        </table>
+      </div>
+      <ol class="todo">
+        <li>플라스틱 막대를 연결해요.</li>
+        <li>고무 막대를 연결해요.</li>
+        <li>금속 막대를 연결해요.</li>
+      </ol>
+      <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">금속과 같이 전기가 잘 흐르는 물질을 도체, 플라스틱·고무·종이·유리와 같이 전기가 잘 흐르지 않는 물질을 부도체라고 해요.</span></div>
+    </div>
+    <p class="fine">전구(1.5 V), 전지(1.5 V) 한 개를 연결한 전기 회로</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="series" data-label="직렬연결" hidden>
+  <div class="head">
+    <p class="kind">체험 2 · 과학 62~63쪽 · 실험 관찰 38~39쪽</p>
+    <h2>전기 회로에 전지 한 개를 더 연결하면 어떻게 될까?</h2>
+    <div class="memo"><b>발문</b>«전지가 여러 개 들어 있는 전기 기구는 무엇이 있나요?» · 한 전지의 (+)극을 다른 전지의 (-)극에 연결하는 것이 전지의 직렬연결입니다. «전지 방향 바꾸기»로 (+)극끼리 마주 보게 하면 불이 켜지지 않는 것을 보여 줄 수 있습니다. 버저 소리는 «버저 소리 듣기»를 켠 기기에서만 납니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view flat">
+      <canvas class="flat2d" id="serCv" aria-label="전지 한 개를 연결한 전기 회로와 전지 두 개를 직렬연결한 전기 회로"></canvas>
+      <div class="over">
+        <button class="btn" type="button" data-part="bulb" aria-pressed="true">전구</button>
+        <button class="btn" type="button" data-part="motor" aria-pressed="false">전동기</button>
+        <button class="btn" type="button" data-part="buzzer" aria-pressed="false">버저</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <button class="btn go" type="button" id="serSw">스위치 닫기</button>
+      <button class="btn" type="button" id="serFlip" aria-pressed="false">전지 방향 바꾸기</button>
+      <label class="chk"><input type="checkbox" id="serSound"> 버저 소리 듣기</label>
+    </div>
+  </div>
+  <div class="side">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>전기 부품</th><th>전지 한 개</th><th>전지 두 개 직렬연결</th></tr></thead>
+        <tbody id="serTable"></tbody>
+      </table>
+    </div>
+    <ol class="todo">
+      <li>전구를 연결하고 스위치를 닫아 밝기를 비교해요.</li>
+      <li>전동기와 버저로 바꾸어 비교해요.</li>
+      <li>아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="serQ" hidden>
+      <p>전구의 밝기를 비교하면? 전지 한 개 ( ) 전지 두 개 직렬연결</p>
+      <div class="opts row"><button class="opt" type="button" data-v="gt">＞</button><button class="opt" type="button" data-v="eq">=</button><button class="opt" type="button" data-v="lt">＜</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전지 두 개를 연결할 때 한 전지의 (+)극을 다른 전지의 (-)극에 연결하는 방법을 전지의 직렬연결이라고 해요. 전지 한 개를 연결한 전기 회로의 전구보다 전지 두 개를 직렬연결한 전기 회로의 전구가 더 밝아요.</span></div>
+    <p class="fine">전구·전동기·버저는 3.0 V용, 전지는 1.5 V</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="magnet" data-label="전자석" hidden>
+  <div class="head">
+    <p class="kind">체험 3 · 과학 64~67쪽 · 실험 관찰 40~43쪽</p>
+    <h2>전자석의 성질이 궁금해!</h2>
+    <div class="memo"><b>발문</b>«스위치를 닫기 전과 닫은 뒤에 무엇이 달라졌나요?» «세기가 아주 센 전자석을 만들려면 어떻게 하면 될까요?» · 전자석의 세기는 옆에서, 전자석의 극은 위에서 내려다보면 잘 보입니다. 실제 실험에서는 스위치를 오래 닫고 있으면 전자석이 뜨거워지므로 필요할 때만 닫게 합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="전자석과 둥근 철 고리, 나침반. 끌어서 돌려 볼 수 있음"></canvas>
+      <div class="over">
+        <button class="btn" type="button" data-mode="power" aria-pressed="true">전자석의 세기</button>
+        <button class="btn" type="button" data-mode="pole" aria-pressed="false">전자석의 극</button>
+      </div>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값으로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <button class="btn go" type="button" id="magSw">스위치 닫기</button>
+      <span id="magCells">
+        <button class="btn" type="button" data-cells="1" aria-pressed="true">전지 한 개</button>
+        <button class="btn" type="button" data-cells="2" aria-pressed="false">전지 두 개 직렬연결</button>
+      </span>
+      <button class="btn" type="button" id="magFlip" aria-pressed="false" hidden>전지 방향 바꾸기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>전기가</span><b id="magOn" class="sm">흐르지 않아요</b></div>
+      <div class="read" style="--c: var(--shade)" id="magRingBox"><span>붙은 둥근 철 고리</span><b id="magRings">0</b><small>개</small></div>
+      <div class="read" style="--c: var(--hot)" id="magPoleBox" hidden><span>전자석의 극</span><b id="magPoles" class="sm">없음</b></div>
+    </div>
+    <ol class="todo">
+      <li>전지 한 개로 스위치를 닫아 둥근 철 고리가 붙는지 봐요.</li>
+      <li>전지 두 개를 직렬연결하고 붙는 고리의 개수를 비교해요.</li>
+      <li>«전자석의 극»에서 전지의 방향을 바꾸며 나침반 바늘을 봐요.</li>
+    </ol>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전자석은 전기가 흐를 때만 자석의 성질이 나타나요. 직렬연결한 전지의 개수가 많을수록 전자석의 세기가 세지고, 연결한 전지의 방향을 바꾸면 전자석의 양쪽 극이 반대로 바뀌어요.</span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th></th><th>영구 자석</th><th>전자석</th></tr></thead>
+        <tbody>
+          <tr><td>자석의 성질</td><td>항상 나타남</td><td>전기가 흐를 때만</td></tr>
+          <tr><td>세기</td><td>일정함</td><td>바꿀 수 있음</td></tr>
+          <tr><td>극</td><td>바꿀 수 없음</td><td>바꿀 수 있음</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">붙는 고리의 개수는 이해를 돕기 위한 예 · 나침반의 빨간 쪽이 N극</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="crane" data-label="기중기" hidden>
+  <div class="head">
+    <p class="kind">체험 4 · 과학 68~69쪽 · 실험 관찰 44~45쪽</p>
+    <h2>전자석을 사용하는 예를 알아볼까?</h2>
+    <div class="memo"><b>발문</b>«만약 영구 자석으로 기중기를 만든다면 어떤 점이 불편할까요?» · 전자석 기중기로 철로 만든 물체만 골라 옮기게 합니다. 플라스틱병과 나무토막은 붙지 않습니다. 교실에서 전자석을 사용하는 예(선풍기, 스피커)를 찾는 조사 활동으로 이어 갑니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view flat">
+      <canvas class="flat2d" id="craCv" aria-label="전자석 기중기. 철로 만든 물체를 붙여 상자로 옮기는 놀이"></canvas>
+    </div>
+    <div class="ctrl">
+      <label for="craX">기중기 위치</label>
+      <input type="range" id="craX" min="60" max="740" step="2" value="120">
+      <button class="btn go" type="button" id="craSw">스위치 닫기</button>
+      <button class="btn" type="button" id="craReset">다시 하기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>전자석</span><b id="craOn" class="sm">꺼짐</b></div>
+      <div class="read" style="--c: var(--ok)"><span>상자에 옮긴 철 물체</span><b id="craN">0</b><small>/ 3개</small></div>
+    </div>
+    <ol class="todo">
+      <li>기중기를 물체 위로 옮기고 스위치를 닫아요.</li>
+      <li>철로 만든 물체 세 개를 모두 상자에 옮겨요.</li>
+      <li>아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="craQ" hidden>
+      <p>영구 자석으로 기중기를 만든다면 불편한 점은?</p>
+      <div class="opts"><button class="opt" type="button" data-v="stick">붙은 물체를 원하는 곳에서 떼어 내기 어려워요</button><button class="opt" type="button" data-v="iron">철로 만든 물체가 붙지 않아요</button><button class="opt" type="button" data-v="light">가벼운 물체만 들 수 있어요</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전자석 기중기는 전기가 흐를 때만 자석이 되는 성질을 이용해 철로 만든 무거운 물체를 붙였다 뗄 수 있어요.</span></div>
+    <div class="card" style="--c: var(--cold)"><b>전자석을 사용하는 다른 예</b><p>선풍기: 전자석을 이용한 전동기가 회전하며 바람을 일으켜요. 스피커: 영구 자석과 전자석이 밀고 당기는 힘으로 막이 떨리며 소리가 나요. 전기 자동차: 전자석을 이용해 바퀴가 회전해요.</p></div>
+  </div>
+</section>
+
+<section class="slide check" data-name="safe" data-label="전기 사용" hidden>
+  <div class="head">
+    <p class="kind">체험 5 · 과학 70~75쪽 · 실험 관찰 46~49쪽</p>
+    <h2>전기, 어떻게 사용해야 할까?</h2>
+    <div class="memo"><b>발문</b>«냉장고 문을 자주 여닫으면 어떤 문제가 생길까요?» · 전기를 효율적으로 사용한다는 것은 낭비되거나 손실되는 전기를 최소화하는 것입니다. 고른 뒤 모둠별 전기 사용 생활 규칙(실험 관찰 48~49쪽 점검표)으로 이어 갑니다.</div>
+  </div>
+  <div><ul class="ox habits" id="habits"></ul></div>
+  <div class="sum">
+    <p class="score" id="habScore" aria-live="polite">상황마다 알맞은 행동을 골라 보세요.</p>
+    <div class="card" style="--c: var(--ok)"><b>효율적으로 사용해요</b><p id="habEff">아직 찾지 못했어요.</p></div>
+    <div class="card" style="--c: var(--hot)"><b>안전하게 사용해요</b><p id="habSafe">아직 찾지 못했어요.</p></div>
+  </div>
+</section>
+
+<section class="slide check" data-name="check" data-label="확인" hidden>
+  <div class="head">
+    <p class="kind">정리</p>
+    <h2>확인하기</h2>
+    <div class="memo"><b>마무리</b>표지에서 고른 생각을 다시 보고, 생각이 바뀐 학생에게 바뀐 까닭을 말하게 합니다.</div>
+  </div>
+  <div>
+    <ul class="ox">
+      <li data-a="o"><p class="q">전기 부품이 전지의 (+)극부터 (-)극까지 끊어진 곳 없이 연결되어야 전구에 불이 켜진다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>이렇게 연결한 것을 전기 회로라고 해요.</p></li>
+      <li data-a="x"><p class="q">플라스틱과 고무는 전기가 잘 흐르는 도체이다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>플라스틱과 고무는 부도체, 금속은 도체예요.</p></li>
+      <li data-a="o"><p class="q">전지 두 개를 직렬연결하면 전지 한 개를 연결했을 때보다 전구가 더 밝다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>한 전지의 (+)극을 다른 전지의 (-)극에 연결해요.</p></li>
+      <li data-a="x"><p class="q">전자석은 전기가 흐르지 않아도 항상 자석의 성질이 나타난다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>전자석은 전기가 흐를 때만 자석의 성질이 나타나요.</p></li>
+      <li data-a="o"><p class="q">전자석에 연결한 전지의 방향을 바꾸면 전자석의 극이 바뀐다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>영구 자석은 양쪽 극을 바꿀 수 없어요.</p></li>
+    </ul>
+  </div>
+  <div class="sum">
+    <p class="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
+    <div class="card" style="--c: var(--ok)"><b>손전등의 스위치</b><p>스위치를 닫으면 전기 회로가 연결되어 전기가 흐르고, 전구에 불이 켜져요.</p></div>
+    <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>새로 산 마우스의 전지 칸에 비닐이 끼워져 있는 까닭은 무엇일까요?</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button type="button" id="prev">← 이전</button>
+  <span id="pos"></span>
+  <button type="button" id="next">다음 →</button>
+</footer>
+</div>

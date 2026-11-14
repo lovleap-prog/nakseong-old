@@ -36,6 +36,7 @@ button { cursor: pointer; }
 .steps button[aria-current="true"] i { background: var(--sun); color: var(--ink); }
 .ghost { min-height: 40px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-weight: 700; font-size: 15px; }
 .ghost[aria-pressed="true"] { background: var(--sun-soft); }
+.roomcode { padding: 4px 14px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 400 22px/1.4 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 
 .deck { flex: 1; min-height: 0; overflow: auto; padding-block: 16px; }
 .slide { max-width: 1500px; margin: 0 auto; min-height: 100%; }
@@ -197,6 +198,7 @@ td.wait { color: var(--line); }
 <header class="top">
   <div class="unit"><span>6학년 2학기 과학 3단원</span><b>전기의 이용</b></div>
   <nav class="steps" id="steps" aria-label="장 차례"></nav>
+  <span class="roomcode" id="roomCode" hidden></span>
   <button class="ghost" type="button" id="followBtn" aria-pressed="true" hidden>선생님 따라가는 중</button>
   <button class="ghost" type="button" id="leadBtn" aria-pressed="false" hidden>수업 진행</button>
   <button class="ghost" type="button" id="memoBtn" aria-pressed="false">선생님 메모</button>
@@ -733,50 +735,69 @@ window.Lesson = (function () {
   go(fromHash(), false);
 
   /* ---------- 선생님 따라 넘기기 ----------
-     진행하는 기기가 지금 장을 공유 저장소 문서(live/state)에 적고, 다른 기기는 그 문서를 지켜보다 따라 넘긴다.
-     공유 저장소는 로그인한 사람에게만 열리므로, 없으면(파일로 열기·로그인 안 함) 단추가 나타나지 않는다. */
-  (async function follow() {
-    if (!window.claude || !window.claude.use) return;
-    let db = null, user = null;
-    try { db = await window.claude.use('db'); user = await window.claude.use('user'); } catch (e) { db = null; }
-    if (!db) return;
-    let canLead = false;
-    try { canLead = user ? await user.canEdit() : false; } catch (e) { canLead = false; }
-    const ME = Math.random().toString(36).slice(2, 10);
-    const ref = db.doc('live/state'), leadBtn = $('#leadBtn'), followBtn = $('#followBtn');
-    let leading = false, following = true, remote = null, busy = Promise.resolve();
-    const write = (data) => { busy = busy.then(() => ref.set(data)).catch(() => {}); };
-    function paint() {
-      leadBtn.hidden = !canLead;
-      leadBtn.setAttribute('aria-pressed', String(leading));
-      leadBtn.textContent = leading ? '수업 진행 중 · 끝내기' : '수업 진행';
-      const live = !!(remote && remote.on && !leading);
-      followBtn.hidden = !live;
-      followBtn.setAttribute('aria-pressed', String(following));
-      followBtn.textContent = following ? '선생님 따라가는 중' : '따로 보는 중 · 따라가기';
+     진행하는 기기가 지금 장을 공유 저장소에 적고, 다른 기기는 그것을 지켜보다 따라 넘긴다.
+     저장소는 두 가지 중 있는 것을 쓴다.
+       수업방(window.LessonRoom, 웹에 올린 판): 선생님이 구글로 로그인해 방을 열고, 학생은 참여 코드로 로그인 없이 들어온다.
+       claude.ai 공유 저장소: 로그인한 사람끼리만 된다.
+     둘 다 없으면(파일로 열기) 단추가 나타나지 않는다. */
+    async function claudeStore() {
+      if (!window.claude || !window.claude.use) return null;
+      let db = null, user = null;
+      try { db = await window.claude.use('db'); user = await window.claude.use('user'); } catch (e) { db = null; }
+      if (!db) return null;
+      let canLead = false;
+      try { canLead = user ? await user.canEdit() : false; } catch (e) { canLead = false; }
+      const me = Math.random().toString(36).slice(2, 10), ref = db.doc('live/state');
+      let busy = Promise.resolve();
+      const put = (d) => { busy = busy.then(() => ref.set(d)).catch(() => {}); };
+      return {
+        canLead, me, leadLabel: '수업 진행',
+        open: async () => '',
+        close: (slide) => put({ on: false, slide, by: me }),
+        write: (slide) => put({ on: true, slide, by: me }),
+        watch: (cb, fail) => ref.onSnapshot((snap) => cb(snap.exists ? snap.data() : null), fail),
+      };
     }
-    onGo = (n) => { if (leading) write({ on: true, slide: n, by: ME }); };
-    leadBtn.addEventListener('click', () => {
-      leading = !leading;
-      write(leading ? { on: true, slide: names[idx], by: ME } : { on: false, slide: names[idx], by: ME });
-      paint();
-    });
-    followBtn.addEventListener('click', () => {
-      following = !following;
-      if (following && remote && remote.on) go(Math.max(0, names.indexOf(remote.slide)), false);
-      paint();
-    });
-    ref.onSnapshot((snap) => {
-      const d = snap.exists ? snap.data() : null;
-      remote = d && typeof d.slide === 'string' ? d : null;
-      if (remote && remote.on && remote.by !== ME) {
-        leading = false;                                   // 다른 기기가 진행을 맡았다
-        if (following && names.indexOf(remote.slide) >= 0) go(names.indexOf(remote.slide), false);
+    (async function follow() {
+      let store = null;
+      try { store = window.LessonRoom ? await window.LessonRoom.connect() : await claudeStore(); } catch (e) { store = null; }
+      if (!store) return;
+      const leadBtn = $('#leadBtn'), followBtn = $('#followBtn'), codeEl = $('#roomCode');
+      let leading = false, following = true, remote = null, code = '';
+      function paint() {
+        leadBtn.hidden = !store.canLead;
+        leadBtn.setAttribute('aria-pressed', String(leading));
+        leadBtn.textContent = leading ? '수업 진행 중 · 끝내기' : store.leadLabel;
+        if (codeEl) { codeEl.hidden = !(leading && code); codeEl.textContent = code ? '참여 코드 ' + code.slice(0, 3) + ' ' + code.slice(3) : ''; }
+        const live = !!(remote && remote.on && !leading);
+        followBtn.hidden = !live;
+        followBtn.setAttribute('aria-pressed', String(following));
+        followBtn.textContent = following ? '선생님 따라가는 중' : '따로 보는 중 · 따라가기';
       }
+      onGo = (n) => { if (leading) store.write(n); };
+      leadBtn.addEventListener('click', async () => {
+        if (leading) { leading = false; store.close(names[idx]); paint(); return; }
+        leadBtn.disabled = true;
+        try { code = (await store.open(names[idx])) || ''; leading = true; store.write(names[idx]); }
+        catch (e) { leadBtn.textContent = '열지 못했어요 · 다시 누르기'; leadBtn.disabled = false; return; }
+        leadBtn.disabled = false;
+        paint();
+      });
+      followBtn.addEventListener('click', () => {
+        following = !following;
+        if (following && remote && remote.on) go(Math.max(0, names.indexOf(remote.slide)), false);
+        paint();
+      });
+      store.watch((d) => {
+        remote = d && typeof d.slide === 'string' ? d : null;
+        if (remote && remote.on && remote.by !== store.me) {
+          leading = false;                                 // 다른 기기가 진행을 맡았다
+          if (following && names.indexOf(remote.slide) >= 0) go(names.indexOf(remote.slide), false);
+        }
+        paint();
+      }, () => { leadBtn.hidden = true; followBtn.hidden = true; });
       paint();
-    }, () => { leadBtn.hidden = true; followBtn.hidden = true; });
-    paint();
-  })();
+    })();
   }
 
   return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start };

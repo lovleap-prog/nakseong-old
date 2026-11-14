@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && auth.token.firebase.sign_in_provider === 'google.com' && (!data.exists() || data.child('owner').val() === auth.uid)",
+        ".validate": "$code.matches(/^[0-9]{6}$/) && newData.hasChildren(['owner', 'lesson', 'slide', 'on']) && newData.child('owner').val() === auth.uid",
+        "owner": { ".validate": "newData.isString()" },
+        "lesson": { ".validate": "newData.isString() && newData.val().length < 40" },
+        "slide": { ".validate": "newData.isString() && newData.val().length < 40" },
+        "on": { ".validate": "newData.isBoolean()" },
+        "at": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>계절의 변화 3D 수업</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 배치: 위쪽 차례 띠 · 가운데 한 장(왼쪽 3D 무대 + 오른쪽 기록 칸) · 아래 넘기기. 교실 화면에 맞춰 밝은 판 하나로 둔다. */
+:root {
+  color-scheme: light;
+  --sky: #e6f1f9; --sky-deep: #bcdcf2; --paper: #fbfdfe; --ink: #14273d; --ink-2: #47596e; --line: #c4d4e1;
+  --sun: #f08c00; --sun-soft: #ffe8b5; --hot: #dc3f2a; --cold: #2a6bd1; --leaf: #23875a;
+  --ground: #c3dba3; --shade: #2b3848; --ok: #1f8a4c; --ok-soft: #dff3e6; --no-soft: #fde3de;
+  --f-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--sky); color: var(--ink); font: 400 17px/1.55 var(--f-body); word-break: keep-all; overflow-wrap: break-word; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--cold); outline-offset: 2px; }
+
+.app { height: 100%; display: flex; flex-direction: column; }
+.top, .nav, .deck { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding-block: 10px; background: var(--paper); border-bottom: 2px solid var(--ink); }
+.unit { display: flex; align-items: baseline; gap: 10px; font-family: var(--f-display); }
+.unit span { font-size: 15px; color: var(--ink-2); }
+.unit b { font-size: 24px; font-weight: 400; }
+.steps { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.steps button { min-height: 40px; padding: 0 12px; border: 2px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--ink-2); font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+.steps button i { font-style: normal; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--sky); font-size: 13px; }
+.steps button[aria-current="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.steps button[aria-current="true"] i { background: var(--sun); color: var(--ink); }
+.ghost { min-height: 40px; padding: 0 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-weight: 700; font-size: 15px; }
+.ghost[aria-pressed="true"] { background: var(--sun-soft); }
+.roomcode { padding: 4px 14px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 400 22px/1.4 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+
+.deck { flex: 1; min-height: 0; overflow: auto; padding-block: 16px; }
+.slide { max-width: 1500px; margin: 0 auto; min-height: 100%; }
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; background: var(--paper); border-top: 2px solid var(--ink); }
+.nav button { min-height: 46px; padding: 0 22px; border: 2px solid var(--ink); border-radius: 999px; background: var(--ink); color: var(--paper); font-weight: 700; }
+.nav button:disabled { background: var(--paper); color: var(--line); border-color: var(--line); cursor: default; }
+.nav span { font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.kind { margin: 0; font-weight: 700; font-size: 15px; color: var(--sun); letter-spacing: .04em; }
+h1, h2 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.2; }
+h1 { font-size: clamp(32px, 4.6vw, 60px); }
+h2 { font-size: clamp(24px, 2.6vw, 36px); }
+.ask { margin: 2px 0 0; color: var(--ink-2); font-size: 18px; }
+.memo { display: none; margin: 10px 0 0; padding: 10px 14px; background: var(--sun-soft); border-left: 5px solid var(--sun); font-size: 15px; }
+.memo b { display: block; }
+.memo-on .memo { display: block; }
+.fine { margin: 0; font-size: 13px; color: var(--ink-2); }
+
+/* 표지 */
+.cover { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+.cover .txt { display: grid; gap: 16px; }
+.goals { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; counter-reset: g; }
+.goals li { counter-increment: g; display: flex; gap: 10px; }
+.goals li::before { content: counter(g); flex: none; display: grid; place-items: center; width: 26px; height: 26px; margin-top: 1px; border-radius: 50%; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 14px; }
+.pick { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; }
+.pick h3 { margin: 0; font: 400 20px/1.3 var(--f-display); }
+.opts { display: grid; gap: 8px; }
+.opts.row { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.opt { min-height: 46px; padding: 8px 14px; text-align: left; border: 2px solid var(--line); border-radius: 10px; background: var(--paper); font-weight: 500; }
+.opts.row .opt { text-align: center; font-weight: 700; }
+.opt:hover { border-color: var(--ink); }
+.opt[aria-pressed="true"] { border-color: var(--ink); background: var(--sun-soft); }
+.opt.right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.wrong { border-color: var(--hot); background: var(--no-soft); }
+.say { margin: 0; min-height: 1.5em; font-weight: 700; color: var(--ink-2); }
+.cover svg { width: 100%; height: auto; display: block; }
+
+/* 체험 장 */
+.lab { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 14px 20px; }
+.lab .head { grid-column: 1 / -1; }
+.stage { min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.view { position: relative; flex: 1; min-height: 340px; border: 2px solid var(--ink); border-radius: 14px; overflow: hidden; background: linear-gradient(var(--sky-deep), var(--paper) 78%); }
+.view.space { background: #101b2e; }
+.view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.view canvas:active { cursor: grabbing; }
+.view .hint { position: absolute; left: 10px; bottom: 8px; margin: 0; padding: 2px 10px; border-radius: 999px; background: rgba(255, 255, 255, .85); color: var(--ink); font-size: 13px; pointer-events: none; }
+.view .clock { position: absolute; right: 10px; top: 10px; margin: 0; padding: 4px 12px; border-radius: 999px; background: var(--ink); color: var(--paper); font-weight: 700; font-variant-numeric: tabular-nums; }
+.view .over { position: absolute; left: 10px; top: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.view .over .btn[aria-pressed="true"] { background: var(--sun); color: var(--ink); }
+.view .fallback { display: none; position: absolute; inset: 0; margin: 0; padding: 24px; place-items: center; text-align: center; background: var(--paper); }
+.view.no3d .fallback { display: grid; }
+.ctrl { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; padding: 10px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.ctrl label { font-weight: 700; }
+.ctrl input[type="range"] { flex: 1; min-width: 160px; height: 34px; accent-color: var(--sun); }
+.ctrl output { font-weight: 700; min-width: 7.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.btn { min-height: 44px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-weight: 700; }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn.go { background: var(--sun); }
+.btn .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; background: var(--c, var(--sun)); border: 1px solid var(--ink); }
+
+.side { min-width: 0; display: grid; gap: 12px; align-content: start; }
+.reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+.read { background: var(--paper); border-radius: 12px; padding: 8px 12px; border-top: 5px solid var(--c, var(--ink)); }
+.read span { display: block; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.read b { font: 400 30px/1.15 var(--f-display); font-variant-numeric: tabular-nums; }
+.read b.sm { font-size: 22px; line-height: 1.55; }
+.read small { font-size: 15px; font-weight: 700; margin-left: 2px; }
+.plot { background: var(--paper); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; }
+.plot canvas { width: 100%; height: 190px; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 14px; font-weight: 700; }
+.legend li::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; background: var(--c); }
+.todo { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; counter-reset: t; }
+.todo li { counter-increment: t; display: flex; gap: 8px; color: var(--ink-2); }
+.todo li::before { content: counter(t); flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--ink-2); font-size: 13px; font-weight: 700; }
+.todo li.done { color: var(--ink); font-weight: 700; }
+.todo li.done::before { content: "✓"; background: var(--ok); border-color: var(--ok); color: var(--paper); }
+.quest { background: var(--paper); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.quest p { margin: 0; font-weight: 700; }
+.learn { margin: 0; padding: 12px 14px; border-radius: 12px; border: 2px dashed var(--line); color: var(--ink-2); }
+.learn.open { border: 2px solid var(--ok); background: var(--ok-soft); color: var(--ink); }
+.learn b { display: block; font: 400 19px/1.3 var(--f-display); }
+.learn .body { display: none; }
+.learn.open .body { display: block; }
+.learn.open .lock { display: none; }
+.tablewrap { overflow-x: auto; background: var(--paper); border-radius: 12px; padding: 6px 10px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 14px; color: var(--ink-2); }
+tr:last-child td { border-bottom: 0; }
+td.wait { color: var(--line); }
+.meter { height: 22px; border-radius: 999px; background: var(--sky); overflow: hidden; border: 1px solid var(--line); }
+.meter i { display: block; height: 100%; width: 0; background: var(--sun); transition: width .15s; }
+
+/* 측정값 입력 */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.box { display: grid; gap: 12px; }
+.my { display: grid; gap: 8px; }
+.myhead, .myfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.myhead label { font-weight: 700; font-size: 15px; }
+.my input[type="date"], .my input[type="number"], .my input[type="time"] { min-height: 40px; padding: 2px 8px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); font-variant-numeric: tabular-nums; }
+.my input:focus { border-color: var(--ink); }
+#myStick { width: 5.5em; }
+.my td { padding: 3px 4px; border-bottom: 0; }
+.my td input { width: 100%; min-width: 4.6em; min-height: 34px; }
+.my th { padding: 4px 8px; }
+.chk { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; flex: 1; min-width: 0; }
+.chk input { width: 20px; height: 20px; accent-color: var(--sun); }
+.found { margin: 2px 0 0; padding-left: 1.2em; }
+
+/* 확인 */
+.check { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px 24px; align-content: start; }
+.check .head { grid-column: 1 / -1; }
+.ox { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ox li { background: var(--paper); border-radius: 12px; padding: 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; }
+.ox .q { margin: 0; font-weight: 500; }
+.ox .bt { display: flex; gap: 6px; }
+.ox .bt button { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--ink); background: var(--paper); font: 400 24px/1 var(--f-display); }
+.ox .bt button.right { background: var(--ok); border-color: var(--ok); color: var(--paper); }
+.ox .bt button.wrong { background: var(--no-soft); border-color: var(--hot); }
+.ox .why { grid-column: 1 / -1; margin: 0; font-weight: 700; color: var(--ok); }
+.sum { display: grid; gap: 10px; align-content: start; }
+.card { background: var(--paper); border-radius: 12px; padding: 10px 14px; border-left: 6px solid var(--c, var(--sun)); }
+.card b { display: block; font: 400 19px/1.3 var(--f-display); }
+.card p { margin: 2px 0 0; }
+.score { margin: 0; font: 400 22px/1.3 var(--f-display); }
+
+@media (min-width: 901px) {
+  .slide.lab { height: 100%; }
+  .lab .side { overflow-y: auto; min-height: 0; padding-right: 4px; }
+}
+@media (max-width: 900px) {
+  .steps { order: 3; flex-basis: 100%; flex-wrap: nowrap; }
+  .cover, .lab, .check { grid-template-columns: minmax(0, 1fr); }
+  .lab { grid-template-rows: auto; }
+  .view { flex: none; min-height: 0; aspect-ratio: 4 / 3; max-width: 100%; }
+  .steps button span { display: none; }
+  .steps button { padding: 0 8px; }
+  .unit span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
+</style>
+</head>
+<body data-lesson="season">
+<div class="app">
+<header class="top">
+  <div class="unit"><span>6학년 2학기 과학 1단원</span><b>계절의 변화</b></div>
+  <nav class="steps" id="steps" aria-label="장 차례"></nav>
+  <span class="roomcode" id="roomCode" hidden></span>
+  <button class="ghost" type="button" id="followBtn" aria-pressed="true" hidden>선생님 따라가는 중</button>
+  <button class="ghost" type="button" id="leadBtn" aria-pressed="false" hidden>수업 진행</button>
+  <button class="ghost" type="button" id="memoBtn" aria-pressed="false">선생님 메모</button>
+</header>
+
+<main class="deck" id="deck">
+
+<section class="slide cover" data-name="cover" data-label="표지">
+  <div class="txt">
+    <p class="kind">과학 10~33쪽 · 실험 관찰 6~21쪽</p>
+    <h1>여름은 왜 덥고 겨울은 왜 추울까요?</h1>
+    <ol class="goals">
+      <li>하루 동안 태양 고도, 그림자 길이, 기온의 관계를 찾아요.</li>
+      <li>계절에 따른 태양의 남중 고도와 낮의 길이의 관계를 알아봐요.</li>
+      <li>태양 고도와 태양 에너지양의 관계를 알아봐요.</li>
+      <li>계절의 변화가 생기는 까닭을 설명해요.</li>
+    </ol>
+    <div class="pick" id="pred">
+      <h3>내 생각 고르기: 여름이 겨울보다 더운 까닭은?</h3>
+      <div class="opts">
+        <button class="opt" type="button" data-v="near" aria-pressed="false">여름에는 지구가 태양에 더 가까워져서</button>
+        <button class="opt" type="button" data-v="high" aria-pressed="false">여름에는 태양이 더 높이 떠서</button>
+        <button class="opt" type="button" data-v="hot" aria-pressed="false">여름에는 태양이 더 뜨거워져서</button>
+      </div>
+      <p class="say" id="predSay" aria-live="polite">하나를 골라 보세요. 마지막 장에서 다시 확인해요.</p>
+    </div>
+    <div class="memo"><b>도입</b>답을 알려 주지 않고 손을 들어 인원만 확인합니다. «태양에 가까워져서»를 고르는 학생이 많습니다. 체험 4에서 지구와 태양 사이의 거리가 변하지 않아도 계절이 생기는 것을 보며 스스로 고치게 합니다.</div>
+  </div>
+  <svg viewBox="0 0 520 330" role="img" aria-label="계절에 따라 태양이 지나는 길. 여름에 가장 높고 겨울에 가장 낮다.">
+    <ellipse cx="260" cy="262" rx="236" ry="46" fill="var(--ground)" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M52 262 Q260 -190 468 262" fill="none" stroke="var(--hot)" stroke-width="4"/>
+    <path d="M84 262 Q260 -70 436 262" fill="none" stroke="var(--leaf)" stroke-width="4"/>
+    <path d="M124 262 Q260 50 396 262" fill="none" stroke="var(--cold)" stroke-width="4"/>
+    <circle cx="260" cy="36" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="260" cy="96" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="260" cy="156" r="17" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>
+    <g font-family="var(--f-body)" font-weight="700" font-size="17" fill="var(--ink)">
+      <text x="286" y="42">여름</text><text x="286" y="102">봄, 가을</text><text x="286" y="162">겨울</text>
+      <text x="34" y="300">동</text><text x="468" y="300">서</text><text x="252" y="326">남</text>
+    </g>
+    <line x1="260" y1="262" x2="260" y2="222" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  </svg>
+</section>
+
+<section class="slide lab" data-name="day" data-label="하루" hidden>
+  <div class="head">
+    <p class="kind">체험 1 · 과학 16~19쪽 · 실험 관찰 8~11쪽</p>
+    <h2>하루 동안 태양 고도, 그림자 길이, 기온의 관계는?</h2>
+    <div class="memo"><b>발문</b>«그림자가 가장 짧을 때 태양은 어디에 있나요?» «가장 더운 때는 태양이 가장 높은 때와 같은가요?» · 실제 측정(실험 관찰 8~9쪽)을 한 뒤 «우리 반 측정값»에 표를 옮겨 적으면 그래프가 그려집니다. 측정한 날짜와 막대기 길이를 넣으면 계산한 값(점선)과 견줄 수 있습니다. 기온이 2시간쯤 늦게 가장 높아지는 것은 지표면이 데워지고 그 열로 공기가 데워지는 데 시간이 걸리기 때문입니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="태양 고도 측정기와 하늘의 태양. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="dayT">시각</label>
+      <input type="range" id="dayT" min="510" max="990" step="10" value="510">
+      <output id="dayOut" for="dayT"></output>
+    </div>
+  </div>
+  <div class="side">
+    <div class="tabs">
+      <button class="btn" type="button" data-mode="ex" aria-pressed="true">예시 값</button>
+      <button class="btn" type="button" data-mode="my" aria-pressed="false">우리 반 측정값</button>
+    </div>
+    <div class="reads" id="dayReads">
+      <div class="read" style="--c: var(--sun)"><span>태양 고도</span><b id="dayAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>그림자 길이</span><b id="dayLen">0</b><small>cm</small></div>
+      <div class="read" style="--c: var(--hot)"><span>기온</span><b id="dayTemp">0</b><small>°C</small></div>
+    </div>
+    <div class="my" id="dayMy" hidden>
+      <div class="myhead">
+        <label for="myDate">측정한 날짜</label><input type="date" id="myDate">
+        <label for="myStick">막대기 길이(cm)</label><input type="number" id="myStick" inputmode="decimal" min="1" max="100" step="0.1">
+      </div>
+      <div class="tablewrap">
+        <table id="myTable">
+          <thead><tr><th>측정 시각</th><th>태양 고도(°)</th><th>그림자 길이(cm)</th><th>기온(°C)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="myfoot">
+        <button class="btn" type="button" id="myAdd">줄 추가</button>
+        <label class="chk"><input type="checkbox" id="myEx"> 계산한 값 함께 보기(점선)</label>
+        <button class="btn" type="button" id="myClear">모두 지우기</button>
+      </div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">태양 고도(°)</li><li style="--c: var(--shade)">그림자 길이(cm)</li><li style="--c: var(--hot)">기온(°C)</li></ul>
+      <canvas id="dayPlot" aria-label="시각에 따른 태양 고도, 그림자 길이, 기온 꺾은선그래프"></canvas>
+    </div>
+    <div class="box" id="dayExBox">
+      <ol class="todo">
+        <li>시각 막대를 끌어 태양을 움직여요.</li>
+        <li>오전 9시 30분부터 오후 3시 30분까지 한 시간마다 일곱 번 기록해요.</li>
+        <li>그래프를 보고 아래 물음에 답해요.</li>
+      </ol>
+      <div class="quest" id="dayQ" hidden>
+        <p>태양 고도가 가장 높은 때는?</p>
+        <div class="opts row" data-q="alt"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+        <p>기온이 가장 높은 때는?</p>
+        <div class="opts row" data-q="temp"><button class="opt" type="button" data-v="690">오전 11시 30분</button><button class="opt" type="button" data-v="750">오후 12시 30분</button><button class="opt" type="button" data-v="870">오후 2시 30분</button></div>
+        <p class="say" aria-live="polite"></p>
+      </div>
+      <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양 고도가 높아질수록 그림자 길이는 짧아지고 기온은 높아져요. 태양 고도는 오후 12시 30분 무렵에 가장 높고(태양의 남중 고도), 기온은 오후 2시 30분 무렵에 가장 높아요.</span></div>
+    </div>
+    <div class="box" id="dayMyBox" hidden>
+      <div class="card" style="--c: var(--sun)"><b>우리 반 측정에서 찾은 것</b><ul class="found" id="mySum"></ul></div>
+      <div class="card" style="--c: var(--ok)"><b>정리해요 (실험 관찰 9쪽)</b><p>하루 동안 태양 고도, 그림자 길이, 기온은 어떻게 달라졌나요? 그래프의 모양을 보고 써 봅시다.</p></div>
+    </div>
+    <p class="fine" id="dayFine"></p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="year" data-label="계절" hidden>
+  <div class="head">
+    <p class="kind">체험 2 · 과학 20~21쪽 · 실험 관찰 12~13쪽</p>
+    <h2>계절별 태양의 남중 고도와 낮의 길이의 관계는?</h2>
+    <div class="memo"><b>발문</b>«여름과 겨울의 오후 6시 모습은 어떻게 다른가요?» · 실험 관찰 12쪽 표를 한국천문연구원 자료로 채운 뒤, 이 화면의 값과 견주어 봅니다. 계절별로 같은 시각의 나무 그림자 길이를 예상하게 한 다음 달 막대를 움직여 확인합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="달마다 태양이 하늘을 지나는 길. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="clock" id="yearClock" hidden></p>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="yearM">달</label>
+      <input type="range" id="yearM" min="0" max="11" step="1" value="0">
+      <output id="yearOut" for="yearM"></output>
+      <button class="btn go" type="button" id="yearPlay">하루 보내기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>태양의 남중 고도</span><b id="yearAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--cold)"><span>낮의 길이</span><b id="yearLen" class="sm">0</b></div>
+      <div class="read" style="--c: var(--shade)"><span>남중할 때 그림자</span><b id="yearSh">0</b><small>cm</small></div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">태양의 남중 고도(°)</li><li style="--c: var(--cold)">낮의 길이(시간)</li></ul>
+      <canvas id="yearPlot" aria-label="달에 따른 태양의 남중 고도와 낮의 길이 꺾은선그래프"></canvas>
+    </div>
+    <ol class="todo">
+      <li>달 막대를 끌어 3월부터 다음 해 2월까지 모두 기록해요.</li>
+      <li>6월과 12월에 «하루 보내기»를 눌러 태양이 지나는 길을 견주어요.</li>
+      <li>그래프를 보고 아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="yearQ" hidden>
+      <p>태양의 남중 고도가 높아지면 낮의 길이는?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="long">길어져요</button><button class="opt" type="button" data-v="short">짧아져요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양의 남중 고도가 높아질수록 낮의 길이가 길어져요. 태양의 남중 고도가 높은 여름에는 낮의 길이가 길고, 남중 고도가 낮은 겨울에는 낮의 길이가 짧아요.</span></div>
+    <p class="fine">서울, 매월 21일을 계산한 값 · 막대기 길이 10 cm</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="light" data-label="에너지" hidden>
+  <div class="head">
+    <p class="kind">체험 3 · 과학 22~23쪽 · 실험 관찰 14~15쪽</p>
+    <h2>태양 고도와 태양 에너지양의 관계는?</h2>
+    <div class="memo"><b>발문</b>«무대 위 배우가 밝게 보이려면 조명을 어떻게 비춰야 할까요?» · 손전등은 태양, 손전등과 스마트 기기가 이루는 각은 태양 고도, 센서가 받는 에너지양은 태양 에너지양을 뜻합니다(실험 관찰 15쪽 선 잇기). 같은 빛이 넓게 퍼지면 센서 한 곳에 닿는 양이 줄어드는 것을 바닥의 밝은 부분 넓이로 확인하게 합니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="손전등으로 스마트 기기와 막대를 비추는 모형실험. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값으로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="lightA">손전등 각</label>
+      <input type="range" id="lightA" min="20" max="90" step="1" value="55">
+      <output id="lightOut" for="lightA"></output>
+      <button class="btn" type="button" data-a="76"><span class="dot" style="--c: var(--hot)"></span>여름 남중 고도</button>
+      <button class="btn" type="button" data-a="29"><span class="dot" style="--c: var(--cold)"></span>겨울 남중 고도</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>손전등과 스마트 기기가 이루는 각</span><b id="lightAng">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>막대의 그림자 길이</span><b id="lightSh">0</b><small>cm</small></div>
+    </div>
+    <div class="quest">
+      <p>센서가 받는 빛의 세기 <span id="lightLux"></span></p>
+      <div class="meter"><i id="lightBar"></i></div>
+      <p>빛이 닿는 바닥의 넓이 <span id="lightArea"></span></p>
+      <div class="meter"><i id="areaBar" style="background: var(--cold)"></i></div>
+    </div>
+    <ol class="todo">
+      <li>손전등을 세워 막대의 그림자를 짧게 만들어요(각 70° 이상).</li>
+      <li>손전등을 눕혀 막대의 그림자를 길게 만들어요(각 30° 이하).</li>
+      <li>여름과 겨울의 남중 고도 단추를 모두 눌러 견주어요.</li>
+    </ol>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">손전등과 스마트 기기가 이루는 각이 클수록 센서가 받는 에너지양이 많아요. 이처럼 태양 고도가 높아질수록 일정한 면적의 지표면이 받는 태양 에너지양이 많아져요. 그래서 태양의 남중 고도가 높은 여름에 기온이 높아요.</span></div>
+    <p class="fine">막대 길이 5 cm · 빛의 세기는 손전등을 똑바로 세웠을 때를 100으로 한 값</p>
+  </div>
+</section>
+
+<section class="slide lab" data-name="orbit" data-label="공전" hidden>
+  <div class="head">
+    <p class="kind">체험 4 · 과학 24~27쪽 · 실험 관찰 16~17쪽</p>
+    <h2>계절의 변화가 생기는 까닭은?</h2>
+    <div class="memo"><b>발문</b>«자전축이 수직일 때와 기울어졌을 때, 가·나·다·라에서 그림자 길이는 어떻게 달랐나요?» · 지구본 모형실험과 같은 차례(가→나→다→라, 시계 반대 방향)입니다. 공전하는 동안 자전축이 항상 같은 방향을 향하는 것, 태양과의 거리는 변하지 않는데도 남중 고도가 달라지는 것을 짚어 줍니다. 남반구의 계절(과학 27쪽 2번)로 넓힐 수 있습니다.</div>
+  </div>
+  <div class="stage">
+    <div class="view space">
+      <canvas class="gl" aria-label="태양 주위를 공전하는 지구. 끌어서 돌려 볼 수 있음"></canvas>
+      <div class="over">
+        <button class="btn" type="button" data-tilt="1" aria-pressed="true">자전축이 기울어진 경우</button>
+        <button class="btn" type="button" data-tilt="0" aria-pressed="false">자전축이 수직인 경우</button>
+      </div>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값과 그래프로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="orbitP">지구 위치</label>
+      <input type="range" id="orbitP" min="0" max="360" step="1" value="0">
+      <output id="orbitOut" for="orbitP"></output>
+      <button class="btn go" type="button" id="orbitPlay">공전시키기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>우리나라 태양의 남중 고도</span><b id="orbitAlt">0</b><small>°</small></div>
+      <div class="read" style="--c: var(--shade)"><span>측정기 그림자 길이</span><b id="orbitSh">0</b><small>cm</small></div>
+      <div class="read" style="--c: var(--leaf)"><span>우리나라 계절</span><b id="orbitSeason">봄</b></div>
+    </div>
+    <div class="plot">
+      <ul class="legend"><li style="--c: var(--sun)">기울어진 경우</li><li style="--c: var(--cold)">수직인 경우</li></ul>
+      <canvas id="orbitPlot" aria-label="지구 위치에 따른 우리나라 태양의 남중 고도 그래프"></canvas>
+    </div>
+    <ol class="todo">
+      <li>자전축이 기울어진 채로 지구를 한 바퀴 공전시켜요.</li>
+      <li>자전축을 수직으로 세우고 다시 한 바퀴 공전시켜요.</li>
+      <li>그래프를 보고 아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="orbitQ" hidden>
+      <p>자전축이 수직인 채 공전하면 태양의 남중 고도는?</p>
+      <div class="opts row" data-q="up"><button class="opt" type="button" data-v="change">변해요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p>자전축이 기울어진 채 공전하면 태양의 남중 고도는?</p>
+      <div class="opts row" data-q="tilt"><button class="opt" type="button" data-v="change">변해요</button><button class="opt" type="button" data-v="same">변하지 않아요</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">계절의 변화가 생기는 까닭은 지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 지구의 위치에 따라 태양의 남중 고도와 낮의 길이, 일정한 면적의 지표면이 받는 태양 에너지양이 달라져요.</span></div>
+    <p class="fine">태양과 지구의 크기, 거리는 실제와 다르게 나타냄 · 측정기 막대 길이 2 cm</p>
+  </div>
+</section>
+
+<section class="slide check" data-name="check" data-label="확인" hidden>
+  <div class="head">
+    <p class="kind">정리 · 과학 32~33쪽 · 실험 관찰 20~21쪽</p>
+    <h2>확인하기</h2>
+    <div class="memo"><b>마무리</b>표지에서 고른 생각을 다시 보고, 생각이 바뀐 학생에게 바뀐 까닭을 말하게 합니다. 다음 차시는 계절 축제 안내 자료 만들기(과학 28~29쪽)입니다.</div>
+  </div>
+  <div>
+    <ul class="ox" id="ox">
+      <li data-a="x"><p class="q">하루 동안 태양 고도가 높아질수록 그림자 길이는 길어진다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도가 높아질수록 그림자 길이는 짧아져요.</p></li>
+      <li data-a="o"><p class="q">하루 중 기온이 가장 높은 때는 태양 고도가 가장 높은 때보다 두 시간쯤 뒤이다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도는 오후 12시 30분 무렵, 기온은 오후 2시 30분 무렵에 가장 높아요.</p></li>
+      <li data-a="o"><p class="q">여름에는 태양의 남중 고도가 높고 낮의 길이가 길다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>겨울에는 태양의 남중 고도가 낮고 낮의 길이가 짧아요.</p></li>
+      <li data-a="x"><p class="q">태양 고도가 높아질수록 일정한 면적의 지표면이 받는 태양 에너지양은 적어진다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양 고도가 높아질수록 태양 에너지양이 많아져요.</p></li>
+      <li data-a="x"><p class="q">지구의 자전축이 수직인 채 공전해도 계절의 변화가 생긴다.</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>태양의 남중 고도가 달라지지 않아 계절의 변화가 생기지 않아요.</p></li>
+    </ul>
+  </div>
+  <div class="sum">
+    <p class="score" id="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
+    <div class="card" style="--c: var(--ok)"><b>계절의 변화가 생기는 까닭</b><p>지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 여름에는 태양의 남중 고도가 높아 일정한 면적의 지표면이 받는 태양 에너지양이 많아요.</p></div>
+    <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>남반구에 있는 나라는 우리나라와 계절이 어떻게 다를까요?</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button type="button" id="prev">← 이전</button>
+  <span id="pos"></span>
+  <button type="button" id="next">다음 →</button>
+</footer>
+</div>
+
+<script src="../three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../room.js"></script>
+<script>
+/* 모든 단원이 함께 쓰는 도구: 입체 화면(Three.js), 그래프, 해 볼 일, 장 넘기기, 선생님 따라 넘기기.
+   단원 파일은 const { ... } = window.Lesson 으로 꺼내 쓰고, 마지막에 Lesson.start(parts)를 부른다. */
+window.Lesson = (function () {
+  'use strict';
+  const T = window.THREE;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rootCss = getComputedStyle(document.documentElement);
+  const tok = (k) => rootCss.getPropertyValue('--' + k).trim();
+  const DEG = Math.PI / 180;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const FONT = '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+
+  /* ---------- 입체 화면 공용 ---------- */
+  function makeView(canvas, o) {
+    const wrap = canvas.parentElement;
+    let renderer = null;
+    try { renderer = T && new T.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { renderer = null; }
+    if (!renderer) { wrap.classList.add('no3d'); return null; }
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    const scene = new T.Scene();
+    const camera = new T.PerspectiveCamera(o.fov || 38, 1, 0.1, 300);
+    const v = { yaw: o.yaw, pitch: o.pitch, dist: o.dist };
+    const target = new T.Vector3(o.target[0], o.target[1], o.target[2]);
+    let w = 0, h = 0, active = false, raf = 0, last = 0, frame = null;
+
+    function fit() {
+      const cw = wrap.clientWidth, ch = wrap.clientHeight;
+      if (!cw || !ch || (cw === w && ch === h)) return;
+      w = cw; h = ch;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    function place() {
+      const p = v.pitch * DEG, y = v.yaw * DEG;
+      const d = v.dist * Math.max(1, (o.aspect || 1.5) / camera.aspect);   // 좁은 화면에서는 물러난다
+      camera.position.set(target.x + d * Math.cos(p) * Math.sin(y), target.y + d * Math.sin(p), target.z + d * Math.cos(p) * Math.cos(y));
+      camera.lookAt(target);
+    }
+    function tick(t) {
+      if (!active) return;
+      const dt = Math.min(0.05, (t - last) / 1000 || 0);
+      last = t;
+      fit();
+      if (frame) frame(dt);
+      place();
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(tick);
+    }
+    let drag = null;
+    canvas.addEventListener('pointerdown', (e) => {
+      drag = { x: e.clientX, y: e.clientY, yaw: v.yaw, pitch: v.pitch };
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 일부 기기 */ }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      v.yaw = drag.yaw - (e.clientX - drag.x) * 0.4;
+      v.pitch = clamp(drag.pitch + (e.clientY - drag.y) * 0.3, o.pmin || 6, o.pmax || 82);
+    });
+    const end = () => { drag = null; };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      v.dist = clamp(v.dist * (1 + Math.sign(e.deltaY) * 0.08), o.min, o.max);
+    }, { passive: false });
+
+    return {
+      scene, camera, renderer,
+      onFrame(f) { frame = f; },
+      setActive(on) {
+        if (on === active) return;
+        active = on;
+        if (on) { last = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf);
+      },
+    };
+  }
+
+  // 글자 딱지(항상 화면을 향한다)
+  function label(text, o) {
+    o = o || {};
+    const px = 56, c = document.createElement('canvas'), g = c.getContext('2d');
+    const tex = new T.CanvasTexture(c);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sp.renderOrder = 10;
+    const size = o.size || 0.55;
+    sp.set = function (t) {
+      g.font = '700 ' + px + 'px ' + FONT;
+      const tw = Math.ceil(g.measureText(t).width);
+      const cw = o.round ? px * 1.7 : tw + px * 0.9, chh = px * 1.7;
+      c.width = cw; c.height = chh;
+      if (o.bg) {
+        g.fillStyle = o.bg;
+        const r = chh / 2;
+        g.beginPath(); g.moveTo(r, 0); g.arcTo(cw, 0, cw, chh, r); g.arcTo(cw, chh, 0, chh, r); g.arcTo(0, chh, 0, 0, r); g.arcTo(0, 0, cw, 0, r); g.closePath(); g.fill();
+      }
+      g.font = '700 ' + px + 'px ' + FONT;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = o.color || '#14273d';
+      g.fillText(t, cw / 2, chh / 2 + px * 0.06);
+      tex.needsUpdate = true;
+      sp.scale.set(size * cw / chh, size, 1);
+    };
+    sp.set(text);
+    return sp;
+  }
+  function glowSprite(color, size) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 6, 64, 64, 64);
+    gr.addColorStop(0, color); gr.addColorStop(0.35, color + 'aa'); gr.addColorStop(1, color + '00');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(c), transparent: true, depthWrite: false }));
+    sp.scale.set(size, size, 1);
+    return sp;
+  }
+  function line(points, color, opacity) {
+    const geo = new T.BufferGeometry().setFromPoints(points);
+    return new T.Line(geo, new T.LineBasicMaterial({ color, transparent: opacity < 1, opacity: opacity == null ? 1 : opacity }));
+  }
+  const V3 = (x, y, z) => new T.Vector3(x, y, z);
+  function ring(r, y, n) {
+    const pts = [];
+    for (let i = 0; i <= (n || 96); i++) { const a = i / (n || 96) * Math.PI * 2; pts.push(V3(Math.cos(a) * r, y, Math.sin(a) * r)); }
+    return pts;
+  }
+
+  /* ---------- 그래프 공용 ---------- */
+  function plot(cv, draw) {
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.font = '600 12px ' + FONT;
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    draw(g, w, h);
+  }
+  function series(g, pts, color) {
+    if (!pts.length) return;
+    g.strokeStyle = color; g.fillStyle = color; g.lineWidth = 2.5;
+    g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.stroke();
+    pts.forEach((p) => { g.beginPath(); g.arc(p[0], p[1], 4, 0, Math.PI * 2); g.fill(); });
+  }
+  function gridY(g, x0, x1, ys) {
+    g.strokeStyle = tok('line'); g.lineWidth = 1;
+    ys.forEach((y) => { g.beginPath(); g.moveTo(x0, Math.round(y) + 0.5); g.lineTo(x1, Math.round(y) + 0.5); g.stroke(); });
+  }
+
+  // 해 볼 일 표시: n번까지 마침
+  function todo(root, n) {
+    const items = $$('.todo li', root);
+    items.forEach((li, i) => li.classList.toggle('done', i < n));
+    const learn = $('.learn', root);
+    if (learn) learn.classList.toggle('open', n >= items.length);
+  }
+  // 고르는 물음: 맞히면 done(true)
+  function ask(box, right, done) {
+    const btns = $$('.opt', box);
+    btns.forEach((b) => b.addEventListener('click', () => {
+      const ok = b.dataset.v === right;
+      btns.forEach((x) => x.classList.remove('wrong'));
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (ok) btns.forEach((x) => { x.disabled = x !== b; });
+      done(ok);
+    }));
+  }
+
+  // OX 문제 묶음. 다 풀면 점수를 보여 준다
+  function ox(root) {
+    const items = $$('.ox li', root), score = $('.score', root);
+    let right = 0, doneN = 0;
+    items.forEach((li) => {
+      const btns = $$('.bt button', li);
+      let first = true;
+      btns.forEach((b) => b.addEventListener('click', () => {
+        const ok = b.dataset.v === li.dataset.a;
+        btns.forEach((x) => x.classList.remove('wrong', 'right'));
+        b.classList.add(ok ? 'right' : 'wrong');
+        if (first) { first = false; doneN++; if (ok) right++; }
+        if (ok) { $('.why', li).hidden = false; btns.forEach((x) => { x.disabled = true; }); }
+        score.textContent = doneN < items.length ? doneN + '문제 풀었어요.' : '처음에 맞힌 문제: ' + right + ' / ' + items.length;
+      }));
+    });
+  }
+
+  function start(parts) {
+  /* ---------- 넘기기 ---------- */
+  const slides = $$('.slide'), names = slides.map((s) => s.dataset.name), live = {};
+  const steps = $('#steps'), prevB = $('#prev'), nextB = $('#next'), posEl = $('#pos');
+  let idx = -1;
+  let onGo = function () {};
+  slides.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.dataset.label + '</span>';
+    b.setAttribute('aria-label', (i + 1) + '장 ' + s.dataset.label);
+    b.addEventListener('click', () => go(i, true));
+    steps.appendChild(b);
+  });
+  function go(i, push) {
+    i = clamp(i, 0, slides.length - 1);
+    if (i === idx) return;
+    if (idx >= 0 && live[names[idx]]) live[names[idx]].setActive(false);
+    idx = i;
+    slides.forEach((s, k) => { s.hidden = k !== i; });
+    $$('button', steps).forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+    prevB.disabled = i === 0; nextB.disabled = i === slides.length - 1;
+    posEl.textContent = (i + 1) + ' / ' + slides.length;
+    $('#deck').scrollTop = 0;
+    const n = names[i];
+    if (!live[n] && parts[n]) live[n] = parts[n](slides[i]);
+    if (live[n]) live[n].setActive(true);
+    if (push) { try { window.location.hash = n; } catch (e) { /* 미리 보기 */ } }
+    onGo(n);
+  }
+  prevB.addEventListener('click', () => go(idx - 1, true));
+  nextB.addEventListener('click', () => go(idx + 1, true));
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { go(idx + 1, true); e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(idx - 1, true); e.preventDefault(); }
+  });
+  const fromHash = () => Math.max(0, names.indexOf((window.location.hash || '').slice(1)));
+  window.addEventListener('hashchange', () => go(fromHash(), false));
+  window.addEventListener('resize', () => { const p = live[names[idx]]; if (p && p.refresh) p.refresh(); });
+  const memoBtn = $('#memoBtn');
+  memoBtn.addEventListener('click', () => {
+    const on = document.body.classList.toggle('memo-on');
+    memoBtn.setAttribute('aria-pressed', String(on));
+  });
+  go(fromHash(), false);
+
+  /* ---------- 선생님 따라 넘기기 ----------
+     진행하는 기기가 지금 장을 공유 저장소에 적고, 다른 기기는 그것을 지켜보다 따라 넘긴다.
+     저장소는 두 가지 중 있는 것을 쓴다.
+       수업방(window.LessonRoom, 웹에 올린 판): 선생님이 구글로 로그인해 방을 열고, 학생은 참여 코드로 로그인 없이 들어온다.
+       claude.ai 공유 저장소: 로그인한 사람끼리만 된다.
+     둘 다 없으면(파일로 열기) 단추가 나타나지 않는다. */
+    async function claudeStore() {
+      if (!window.claude || !window.claude.use) return null;
+      let db = null, user = null;
+      try { db = await window.claude.use('db'); user = await window.claude.use('user'); } catch (e) { db = null; }
+      if (!db) return null;
+      let canLead = false;
+      try { canLead = user ? await user.canEdit() : false; } catch (e) { canLead = false; }
+      const me = Math.random().toString(36).slice(2, 10), ref = db.doc('live/state');
+      let busy = Promise.resolve();
+      const put = (d) => { busy = busy.then(() => ref.set(d)).catch(() => {}); };
+      return {
+        canLead, me, leadLabel: '수업 진행',
+        open: async () => '',
+        close: (slide) => put({ on: false, slide, by: me }),
+        write: (slide) => put({ on: true, slide, by: me }),
+        watch: (cb, fail) => ref.onSnapshot((snap) => cb(snap.exists ? snap.data() : null), fail),
+      };
+    }
+    (async function follow() {
+      let store = null;
+      try { store = window.LessonRoom ? await window.LessonRoom.connect() : await claudeStore(); } catch (e) { store = null; }
+      if (!store) return;
+      const leadBtn = $('#leadBtn'), followBtn = $('#followBtn'), codeEl = $('#roomCode');
+      let leading = false, following = true, remote = null, code = '';
+      function paint() {
+        leadBtn.hidden = !store.canLead;
+        leadBtn.setAttribute('aria-pressed', String(leading));
+        leadBtn.textContent = leading ? '수업 진행 중 · 끝내기' : store.leadLabel;
+        if (codeEl) { codeEl.hidden = !(leading && code); codeEl.textContent = code ? '참여 코드 ' + code.slice(0, 3) + ' ' + code.slice(3) : ''; }
+        const live = !!(remote && remote.on && !leading);
+        followBtn.hidden = !live;
+        followBtn.setAttribute('aria-pressed', String(following));
+        followBtn.textContent = following ? '선생님 따라가는 중' : '따로 보는 중 · 따라가기';
+      }
+      onGo = (n) => { if (leading) store.write(n); };
+      leadBtn.addEventListener('click', async () => {
+        if (leading) { leading = false; store.close(names[idx]); paint(); return; }
+        leadBtn.disabled = true;
+        try { code = (await store.open(names[idx])) || ''; leading = true; store.write(names[idx]); }
+        catch (e) { leadBtn.textContent = '열지 못했어요 · 다시 누르기'; leadBtn.disabled = false; return; }
+        leadBtn.disabled = false;
+        paint();
+      });
+      followBtn.addEventListener('click', () => {
+        following = !following;
+        if (following && remote && remote.on) go(Math.max(0, names.indexOf(remote.slide)), false);
+        paint();
+      });
+      store.watch((d) => {
+        remote = d && typeof d.slide === 'string' ? d : null;
+        if (remote && remote.on && remote.by !== store.me) {
+          leading = false;                                 // 다른 기기가 진행을 맡았다
+          if (following && names.indexOf(remote.slide) >= 0) go(names.indexOf(remote.slide), false);
+        }
+        paint();
+      }, () => { leadBtn.hidden = true; followBtn.hidden = true; });
+      paint();
+    })();
+  }
+
+  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start };
+})();
+
+/* 6학년 2학기 과학 1단원 «계절의 변화» 수업 슬라이드.
+   장마다 조각(part)을 하나씩 붙인다: day(하루) · year(계절) · light(에너지) · orbit(공전) · check(확인).
+   입체 화면은 Three.js(전역 THREE), 그래프는 2D 캔버스. 좌표는 +x 동쪽, +y 위, +z 남쪽. */
+(function () {
+  'use strict';
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start } = window.Lesson;
+  const LAT = 37.6 * DEG;      // 서울
+  const NOON = 12.5;           // 우리나라에서 태양이 남중하는 시각(오후 12시 30분 무렵)
+  const TILT = 23.5;
+
+  /* ---------- 계산 ---------- */
+  // 태양 방향(단위 벡터). h: 시각(시), dec: 태양의 적위(°)
+  function sunDir(h, dec) {
+    const H = (h - NOON) * 15 * DEG, d = dec * DEG;
+    const east = -Math.cos(d) * Math.sin(H);
+    const north = Math.cos(LAT) * Math.sin(d) - Math.sin(LAT) * Math.cos(d) * Math.cos(H);
+    const up = Math.sin(LAT) * Math.sin(d) + Math.cos(LAT) * Math.cos(d) * Math.cos(H);
+    return { x: east, y: up, z: -north };
+  }
+  const altOf = (h, dec) => Math.asin(clamp(sunDir(h, dec).y, -1, 1)) / DEG;
+  const noonAlt = (dec) => 90 - LAT / DEG + dec;
+  // 낮의 길이(시간). 해돋이·해넘이는 태양 윗부분이 지평선에 닿는 때(-0.83°)로 잡는다
+  function dayLength(dec) {
+    const d = dec * DEG;
+    const c = (Math.sin(-0.83 * DEG) - Math.sin(LAT) * Math.sin(d)) / (Math.cos(LAT) * Math.cos(d));
+    return 2 * Math.acos(clamp(c, -1, 1)) / DEG / 15;
+  }
+  function clock(min) {
+    const h = Math.floor(min / 60), m = Math.round(min % 60);
+    const h12 = h > 12 ? h - 12 : h;
+    return (h < 12 ? '오전 ' : '오후 ') + h12 + '시' + (m ? ' ' + m + '분' : '');
+  }
+
+  /* ---------- 하늘 무대: 태양 고도 측정기 + 태양이 지나는 길 (체험 1·2) ---------- */
+  function makeSky(canvas) {
+    const view = makeView(canvas, { yaw: 196, pitch: 22, dist: 15, target: [0, 1.35, 0], min: 8, max: 26, aspect: 1.5 });
+    if (!view) return null;
+    const S = view.scene, R = 5.3, GR = 6, U = 1.5;   // U: 10 cm를 나타내는 길이
+    S.add(new T.HemisphereLight(0xffffff, 0xc9d8b0, 0.72));
+    const sunLight = new T.DirectionalLight(0xffffff, 0.3); S.add(sunLight);
+
+    const ground = new T.Mesh(new T.CircleGeometry(GR, 72), new T.MeshLambertMaterial({ color: tok('ground') }));
+    ground.rotation.x = -Math.PI / 2; S.add(ground);
+    for (let r = 1; r <= 3; r++) S.add(line(ring(r * U, 0.006), tok('ink'), 0.22));
+    S.add(line([V3(-GR, 0.006, 0), V3(GR, 0.006, 0)], tok('ink'), 0.28));
+    S.add(line([V3(0, 0.006, -GR), V3(0, 0.006, GR)], tok('ink'), 0.28));
+    [['동', GR + 0.5, 0], ['서', -GR - 0.5, 0], ['남', 0, GR + 0.5], ['북', 0, -GR - 0.5]].forEach((d) => {
+      const l = label(d[0], { bg: tok('ink'), color: '#ffffff', round: true, size: 0.62 });
+      l.position.set(d[1], 0.3, d[2]); S.add(l);
+    });
+    [1, 2, 3].forEach((r) => {
+      const l = label(r * 10 + ' cm', { color: tok('ink-2'), size: 0.4 });
+      l.position.set(-r * U * 0.707, 0.05, -r * U * 0.707); S.add(l);
+    });
+
+    // 측정기: 받침(우드록) · 막대기(10 cm) · 실 · 각
+    const board = new T.Mesh(new T.BoxGeometry(0.9, 0.05, 0.9), new T.MeshLambertMaterial({ color: 0xffffff }));
+    board.position.y = 0.0; S.add(board);
+    const stick = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, U, 16), new T.MeshLambertMaterial({ color: tok('hot') }));
+    stick.position.y = U / 2; S.add(stick);
+    const sg = new T.PlaneGeometry(1, 0.18); sg.translate(0.5, 0, 0); sg.rotateX(-Math.PI / 2);
+    const shadow = new T.Mesh(sg, new T.MeshBasicMaterial({ color: tok('shade'), transparent: true, opacity: 0.7 }));
+    shadow.position.y = 0.03; S.add(shadow);
+    const thread = line([V3(0, 1, 0), V3(1, 0, 0)], tok('ink'), 1); S.add(thread);
+    const arc = line([V3(0, 0, 0), V3(1, 0, 0)], tok('hot'), 1); S.add(arc);
+    const angLab = label('0°', { bg: '#ffffff', color: tok('hot'), size: 0.62 }); S.add(angLab);
+
+    const sun = new T.Mesh(new T.SphereGeometry(0.34, 24, 16), new T.MeshBasicMaterial({ color: tok('sun') })); S.add(sun);
+    const glow = glowSprite('#ffc94d', 2.6); S.add(glow);
+    const ray = line([V3(0, 1, 0), V3(0, 5, 0)], tok('sun'), 0.75); S.add(ray);
+
+    const pathGroup = new T.Group(); S.add(pathGroup);
+    function paths(list) {
+      while (pathGroup.children.length) { const c = pathGroup.children.pop(); c.geometry.dispose(); c.material.dispose(); }
+      list.forEach((p) => {
+        const pts = [];
+        for (let h = 3; h <= 22; h += 0.1) { const d = sunDir(h, p.dec); if (d.y >= 0) pts.push(V3(d.x * R, d.y * R, d.z * R)); }
+        if (pts.length > 1) pathGroup.add(line(pts, p.color, p.opacity == null ? 1 : p.opacity));
+      });
+    }
+
+    function set(hour, dec) {
+      const d = sunDir(hour, dec), alt = Math.asin(clamp(d.y, -1, 1)) / DEG, up = d.y > 0.03;
+      [sun, glow, ray, shadow, thread, arc, angLab].forEach((m) => { m.visible = up; });
+      sun.position.set(d.x * R, d.y * R, d.z * R); glow.position.copy(sun.position);
+      sunLight.position.copy(sun.position); sunLight.intensity = 0.08 + 0.26 * Math.max(0, d.y);
+      if (!up) return;
+      const len = U / Math.tan(alt * DEG), hl = Math.hypot(d.x, d.z) || 1, ux = -d.x / hl, uz = -d.z / hl;
+      const shown = Math.min(len, GR - 0.1);
+      shadow.scale.x = shown; shadow.rotation.y = Math.atan2(-uz, ux);
+      const tip = V3(ux * shown, 0.04, uz * shown);
+      thread.geometry.setFromPoints([V3(0, U, 0), tip]);
+      ray.geometry.setFromPoints([sun.position.clone(), V3(0, U, 0)]);
+      const rr = Math.min(0.85, shown * 0.5), pts = [];
+      for (let i = 0; i <= 24; i++) { const a = alt * DEG * i / 24; pts.push(V3(tip.x - ux * rr * Math.cos(a), tip.y + rr * Math.sin(a), tip.z - uz * rr * Math.cos(a))); }
+      arc.geometry.setFromPoints(pts);
+      const am = alt * DEG / 2, lr = rr + 0.7;
+      angLab.position.set(tip.x - ux * lr * Math.cos(am), tip.y + lr * Math.sin(am) + 0.1, tip.z - uz * lr * Math.cos(am));
+      angLab.set(Math.round(alt) + '°');
+    }
+    return { set, paths, setActive: view.setActive, onFrame: view.onFrame };
+  }
+
+  const parts = {};
+
+  /* ---------- 체험 1: 하루 동안 태양 고도, 그림자 길이, 기온 ----------
+     예시 값(계산)과 우리 반 측정값(실험 관찰 9쪽 표) 두 가지로 본다. 측정값은 이 기기에만 저장된다. */
+  parts.day = function (root) {
+    const sky = makeSky($('canvas.gl', root));
+    const slider = $('#dayT'), out = $('#dayOut'), cv = $('#dayPlot'), qbox = $('#dayQ'), say = $('.say', qbox);
+    const MARKS = [570, 630, 690, 750, 810, 870, 930], KEY = 'season-day-my';
+    const rec = new Set();
+    let prev = +slider.value, moved = false, okAlt = false, okTemp = false, mode = 'ex';
+    const my = { date: '', stick: '10', overlay: true, rows: MARKS.map((m) => ({ t: toHM(m), a: '', l: '', c: '' })) };
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(KEY) || 'null');
+      if (saved && Array.isArray(saved.rows)) Object.assign(my, saved);
+    } catch (e) { /* 저장소를 못 쓰는 기기 */ }
+    const save = () => { try { window.localStorage.setItem(KEY, JSON.stringify(my)); } catch (e) { /* 그대로 둔다 */ } };
+
+    function toHM(min) { return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); }
+    function toMin(hm) { const m = /^(\d{1,2}):(\d{2})$/.exec(hm || ''); return m ? +m[1] * 60 + +m[2] : NaN; }
+    const num = (v) => (v === '' || v == null || isNaN(+v) ? NaN : +v);
+    const stickLen = () => (num(my.stick) > 0 ? num(my.stick) : 10);
+    // 측정한 날짜의 태양 위치(날짜가 없으면 9월 23일 무렵)
+    function myDec() {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(my.date);
+      if (!m) return 0;
+      const n = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(+m[1], 0, 0)) / 86400000);
+      return 23.44 * Math.sin(2 * Math.PI * (n - 80) / 365);
+    }
+    const dec = () => (mode === 'my' ? myDec() : 0);
+    const calc = (min, d, stick) => {
+      const h = min / 60, alt = altOf(h, d);
+      return { alt, len: alt > 1 ? stick / Math.tan(alt * DEG) : NaN, temp: 23.5 + 4.5 * Math.cos((h - 14.5) * 15 * DEG) };
+    };
+    function nice(lo, hi, minStep) {
+      const steps = [1, 2, 2.5, 5, 10, 20, 25, 50, 100];
+      for (let i = 0; i < steps.length; i++) {
+        const st = steps[i];
+        if (st < minStep) continue;
+        const a = Math.floor(lo / st) * st;
+        if (a + 4 * st >= hi) return [a, st];
+      }
+      return [0, 100];
+    }
+    const fmt = (v) => String(+v.toFixed(1));
+
+    function draw() {
+      plot(cv, (g, w, h) => {
+        const L = 62, Rm = 38, Tm = 10, B = 26, x0 = L, x1 = w - Rm, y0 = h - B, y1 = Tm;
+        let xa = 540, xb = 960, ticks = MARKS, sLen = [0, 5], sAlt = [20, 10], sTemp = [20, 3];
+        let dLen = [], dAlt = [], dTemp = [], cLen = [], cAlt = [];
+        if (mode === 'ex') {
+          const got = MARKS.filter((m) => rec.has(m)).map((m) => [m, calc(m, 0, 10)]);
+          dLen = got.map((p) => [p[0], p[1].len]); dAlt = got.map((p) => [p[0], p[1].alt]); dTemp = got.map((p) => [p[0], p[1].temp]);
+        } else {
+          const rows = my.rows.map((r) => ({ m: toMin(r.t), a: num(r.a), l: num(r.l), c: num(r.c) })).filter((r) => !isNaN(r.m)).sort((p, q) => p.m - q.m);
+          if (rows.length) { xa = rows[0].m - 30; xb = rows[rows.length - 1].m + 30; ticks = rows.map((r) => r.m); }
+          dAlt = rows.filter((r) => !isNaN(r.a)).map((r) => [r.m, r.a]);
+          dLen = rows.filter((r) => !isNaN(r.l)).map((r) => [r.m, r.l]);
+          dTemp = rows.filter((r) => !isNaN(r.c)).map((r) => [r.m, r.c]);
+          if (my.overlay) rows.forEach((r) => { const c = calc(r.m, myDec(), stickLen()); if (c.alt > 1) { cAlt.push([r.m, c.alt]); cLen.push([r.m, c.len]); } });
+          const range = (arrs, fb, minStep) => {
+            const vs = [].concat.apply([], arrs).map((p) => p[1]);
+            return vs.length ? nice(Math.min.apply(null, vs), Math.max.apply(null, vs), minStep) : fb;
+          };
+          sAlt = range([dAlt, cAlt], sAlt, 5); sLen = range([dLen, cLen], sLen, 1); sTemp = range([dTemp], sTemp, 1);
+          if (sLen[0] > 0 && sLen[0] <= sLen[1]) sLen = nice(0, sLen[0] + 4 * sLen[1], sLen[1]);
+        }
+        const X = (m) => x0 + (m - xa) / (xb - xa) * (x1 - x0);
+        const Y = (t) => y0 + t * (y1 - y0);
+        const N = (sc) => (v) => Y((v - sc[0]) / (4 * sc[1]));
+        gridY(g, x0, x1, [0, 0.25, 0.5, 0.75, 1].map(Y));
+        g.textBaseline = 'middle';
+        [0, 1, 2, 3, 4].forEach((i) => {
+          const y = Y(i / 4);
+          g.textAlign = 'right'; g.fillStyle = tok('shade'); g.fillText(fmt(sLen[0] + i * sLen[1]), x0 - 34, y);
+          g.fillStyle = tok('sun'); g.fillText(fmt(sAlt[0] + i * sAlt[1]), x0 - 6, y);
+          g.textAlign = 'left'; g.fillStyle = tok('hot'); g.fillText(fmt(sTemp[0] + i * sTemp[1]), x1 + 6, y);
+        });
+        g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = tok('ink-2');
+        let lastX = -99;
+        ticks.forEach((m) => { const x = X(m); if (x - lastX < 34) return; lastX = x; g.fillText(Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'), x, y0 + 6); });
+        const cur = +slider.value;
+        if (cur >= xa && cur <= xb) {
+          g.strokeStyle = tok('ink'); g.lineWidth = 1; g.setLineDash([4, 4]);
+          g.beginPath(); g.moveTo(X(cur), y0); g.lineTo(X(cur), y1); g.stroke(); g.setLineDash([]);
+        }
+        // 계산한 값(견주기용)은 점선
+        [[cLen, sLen, tok('shade')], [cAlt, sAlt, tok('sun')]].forEach((c) => {
+          if (c[0].length < 2) return;
+          g.strokeStyle = c[2]; g.lineWidth = 1.5; g.setLineDash([5, 5]); g.globalAlpha = 0.7;
+          g.beginPath(); c[0].forEach((p, i) => { const x = X(p[0]), y = N(c[1])(p[1]); if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke();
+          g.setLineDash([]); g.globalAlpha = 1;
+        });
+        series(g, dLen.map((p) => [X(p[0]), N(sLen)(p[1])]), tok('shade'));
+        series(g, dAlt.map((p) => [X(p[0]), N(sAlt)(p[1])]), tok('sun'));
+        series(g, dTemp.map((p) => [X(p[0]), N(sTemp)(p[1])]), tok('hot'));
+      });
+    }
+
+    // 우리 반 측정값에서 찾은 것
+    function summary() {
+      const rows = my.rows.map((r) => ({ m: toMin(r.t), a: num(r.a), l: num(r.l), c: num(r.c) })).filter((r) => !isNaN(r.m));
+      const pick = (k, max) => {
+        const ok = rows.filter((r) => !isNaN(r[k]));
+        if (ok.length < 2) return null;
+        return ok.reduce((b, r) => ((max ? r[k] > b[k] : r[k] < b[k]) ? r : b));
+      };
+      const a = pick('a', true), l = pick('l', false), c = pick('c', true);
+      const line1 = (name, r, unit, k) => (r ? name + ': ' + clock(r.m) + ' (' + fmt(r[k]) + unit + ')' : name + ': 두 번 넘게 측정하면 나와요');
+      $('#mySum').innerHTML = [
+        line1('태양 고도가 가장 높은 때', a, '°', 'a'),
+        line1('그림자 길이가 가장 짧은 때', l, ' cm', 'l'),
+        line1('기온이 가장 높은 때', c, ' °C', 'c'),
+      ].map((t) => '<li>' + t + '</li>').join('');
+    }
+
+    function upd() {
+      const m = +slider.value, lo = Math.min(prev, m), hi = Math.max(prev, m);
+      if (mode === 'ex') MARKS.forEach((k) => { if (k >= lo && k <= hi && moved) rec.add(k); });
+      prev = m;
+      const c = calc(m, dec(), mode === 'my' ? stickLen() : 10);
+      out.textContent = clock(m);
+      $('#dayAlt').textContent = Math.round(c.alt);
+      $('#dayLen').textContent = isNaN(c.len) ? '-' : c.len.toFixed(1);
+      $('#dayTemp').textContent = c.temp.toFixed(1);
+      if (sky) sky.set(m / 60, dec());
+      const all = rec.size === MARKS.length;
+      qbox.hidden = !all;
+      todo($('#dayExBox'), okAlt && okTemp ? 3 : all ? 2 : moved ? 1 : 0);
+      draw();
+    }
+    function setMode(mo) {
+      mode = mo;
+      $$('button[data-mode]', root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mo)));
+      $('#dayReads').hidden = mo !== 'ex'; $('#dayExBox').hidden = mo !== 'ex';
+      $('#dayMy').hidden = mo !== 'my'; $('#dayMyBox').hidden = mo !== 'my';
+      $('#dayFine').textContent = mo === 'ex'
+        ? '서울, 9월 23일 무렵을 계산한 값 · 막대기 길이 10 cm · 기온은 이해를 돕기 위한 예'
+        : '측정값은 이 기기에만 저장돼요 · 점선과 입체 화면은 서울에서 그 날짜를 계산한 값';
+      if (sky) sky.paths([{ dec: dec(), color: tok('sun'), opacity: 0.55 }]);
+      upd();
+    }
+
+    // 측정값 표
+    const tbody = $('#myTable tbody');
+    function rowsHtml() {
+      tbody.innerHTML = my.rows.map((r, i) =>
+        '<tr><td><input type="time" step="600" id="my-t-' + i + '" data-i="' + i + '" data-k="t" value="' + r.t + '" aria-label="' + (i + 1) + '번째 측정 시각"></td>' +
+        ['a', 'l', 'c'].map((k) => '<td><input type="number" inputmode="decimal" step="0.1" id="my-' + k + '-' + i + '" data-i="' + i + '" data-k="' + k + '" value="' + r[k] + '" aria-label="' + (i + 1) + '번째 ' + { a: '태양 고도', l: '그림자 길이', c: '기온' }[k] + '"></td>').join('') + '</tr>').join('');
+    }
+    tbody.addEventListener('input', (e) => {
+      const el = e.target, i = +el.dataset.i;
+      if (!my.rows[i]) return;
+      my.rows[i][el.dataset.k] = el.value;
+      save(); summary(); draw();
+    });
+    // 줄을 고르면 입체 화면의 태양도 그 시각으로 간다
+    tbody.addEventListener('focusin', (e) => {
+      const r = my.rows[+e.target.dataset.i], m = r ? toMin(r.t) : NaN;
+      if (isNaN(m)) return;
+      slider.value = clamp(m, +slider.min, +slider.max); prev = +slider.value; upd();
+    });
+    $('#myDate').value = my.date; $('#myStick').value = my.stick; $('#myEx').checked = !!my.overlay;
+    $('#myDate').addEventListener('input', (e) => { my.date = e.target.value; save(); setMode(mode); });
+    $('#myStick').addEventListener('input', (e) => { my.stick = e.target.value; save(); upd(); });
+    $('#myEx').addEventListener('change', (e) => { my.overlay = e.target.checked; save(); draw(); });
+    $('#myAdd').addEventListener('click', () => {
+      if (my.rows.length >= 12) return;
+      const last = toMin(my.rows[my.rows.length - 1].t);
+      my.rows.push({ t: isNaN(last) || last + 60 > 1439 ? '' : toHM(last + 60), a: '', l: '', c: '' });
+      save(); rowsHtml(); draw();
+    });
+    const clearBtn = $('#myClear');
+    let armed = 0;
+    clearBtn.addEventListener('click', () => {
+      if (!armed) { clearBtn.textContent = '한 번 더 누르면 지워요'; armed = setTimeout(() => { armed = 0; clearBtn.textContent = '모두 지우기'; }, 3000); return; }
+      clearTimeout(armed); armed = 0; clearBtn.textContent = '모두 지우기';
+      my.rows = MARKS.map((m) => ({ t: toHM(m), a: '', l: '', c: '' }));
+      save(); rowsHtml(); summary(); draw();
+    });
+    $$('button[data-mode]', root).forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+    slider.addEventListener('input', () => { moved = true; upd(); });
+    const answered = () => { if (okAlt && okTemp) say.textContent = '맞았어요. 두 때는 두 시간쯤 차이가 나요.'; upd(); };
+    ask($('[data-q="alt"]', qbox), '750', (ok) => { okAlt = okAlt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
+    ask($('[data-q="temp"]', qbox), '870', (ok) => { okTemp = okTemp || ok; say.textContent = ok ? '맞았어요.' : '빨간색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
+    rowsHtml(); summary(); setMode('ex');
+    return { setActive(on) { if (sky) sky.setActive(on); if (on) upd(); }, refresh: draw };
+  };
+
+  /* ---------- 체험 2: 계절별 태양의 남중 고도와 낮의 길이 ---------- */
+  parts.year = function (root) {
+    const sky = makeSky($('canvas.gl', root));
+    const slider = $('#yearM'), out = $('#yearOut'), cv = $('#yearPlot'), qbox = $('#yearQ'), say = $('.say', qbox);
+    const playBtn = $('#yearPlay'), clk = $('#yearClock');
+    const MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2];
+    const DAYNO = { 1: 21, 2: 52, 3: 80, 4: 111, 5: 141, 6: 172, 7: 202, 8: 233, 9: 264, 10: 294, 11: 325, 12: 355 };   // 매월 21일
+    const decOf = (mo) => 23.44 * Math.sin(2 * Math.PI * (DAYNO[mo] - 80) / 365);
+    const seasonOf = (mo) => (mo >= 3 && mo <= 5 ? ['봄', tok('leaf')] : mo >= 6 && mo <= 8 ? ['여름', tok('hot')] : mo >= 9 && mo <= 11 ? ['가을', tok('sun')] : ['겨울', tok('cold')]);
+    const rec = new Set([0]), played = new Set();
+    let anim = null, okQ = false;
+    const hm = (hours) => { const m = Math.round(hours * 60); return Math.floor(m / 60) + '시간 ' + (m % 60) + '분'; };
+
+    function draw() {
+      plot(cv, (g, w, h) => {
+        const L = 30, Rm = 30, Tm = 10, B = 26, x0 = L, x1 = w - Rm, y0 = h - B, y1 = Tm;
+        const X = (i) => x0 + (i + 0.5) / 12 * (x1 - x0);
+        const Y = (deg) => y0 + deg / 80 * (y1 - y0);          // 왼쪽 눈금 0~80°
+        const YL = (hr) => Y((hr - 8) * 10);                   // 오른쪽 눈금 9~16시간(교과서 종이 그래프와 같은 칸)
+        gridY(g, x0, x1, [0, 10, 20, 30, 40, 50, 60, 70, 80].map(Y));
+        g.textBaseline = 'middle';
+        for (let d = 0; d <= 80; d += 20) { g.textAlign = 'right'; g.fillStyle = tok('sun'); g.fillText(String(d), x0 - 6, Y(d)); }
+        for (let hr = 10; hr <= 16; hr += 2) { g.textAlign = 'left'; g.fillStyle = tok('cold'); g.fillText(String(hr), x1 + 6, YL(hr)); }
+        g.textAlign = 'center'; g.textBaseline = 'top';
+        const cur = +slider.value;
+        MONTHS.forEach((mo, i) => { g.fillStyle = i === cur ? tok('ink') : tok('ink-2'); g.fillText(String(mo), X(i), y0 + 6); });
+        g.strokeStyle = tok('ink'); g.lineWidth = 1; g.setLineDash([4, 4]);
+        g.beginPath(); g.moveTo(X(cur), y0); g.lineTo(X(cur), y1); g.stroke(); g.setLineDash([]);
+        const got = MONTHS.map((mo, i) => [i, decOf(mo)]).filter((p) => rec.has(p[0]));
+        series(g, got.map((p) => [X(p[0]), YL(dayLength(p[1]))]), tok('cold'));
+        series(g, got.map((p) => [X(p[0]), Y(noonAlt(p[1]))]), tok('sun'));
+      });
+    }
+    function upd() {
+      const i = +slider.value, mo = MONTHS[i], dec = decOf(mo), sn = seasonOf(mo), alt = noonAlt(dec);
+      rec.add(i);
+      out.textContent = mo + '월 21일 · ' + sn[0];
+      $('#yearAlt').textContent = Math.round(alt);
+      $('#yearLen').textContent = hm(dayLength(dec));
+      $('#yearSh').textContent = (10 / Math.tan(alt * DEG)).toFixed(1);
+      if (sky) {
+        sky.paths([
+          { dec: 23.44, color: tok('hot'), opacity: 0.28 }, { dec: 0, color: tok('leaf'), opacity: 0.28 }, { dec: -23.44, color: tok('cold'), opacity: 0.28 },
+          { dec, color: sn[1], opacity: 1 },
+        ]);
+        if (!anim) sky.set(NOON, dec);
+      }
+      const all = rec.size === 12, both = played.has(3) && played.has(9);
+      qbox.hidden = !(all && both);
+      todo(root, okQ && all && both ? 3 : all && both ? 2 : all ? 1 : 0);
+      draw();
+    }
+    function stop() { anim = null; clk.hidden = true; playBtn.textContent = '하루 보내기'; upd(); }
+    playBtn.addEventListener('click', () => {
+      if (anim) { stop(); return; }
+      const i = +slider.value, dec = decOf(MONTHS[i]), half = dayLength(dec) / 2;
+      anim = { t: 0, dec, from: NOON - half, to: NOON + half };
+      played.add(i);
+      playBtn.textContent = '멈추기'; clk.hidden = false;
+    });
+    slider.addEventListener('input', () => { if (anim) stop(); else upd(); });
+    if (sky) sky.onFrame((dt) => {
+      if (!anim) return;
+      anim.t += dt / (reduce ? 2.5 : 5);
+      const h = anim.from + (anim.to - anim.from) * Math.min(1, anim.t);
+      sky.set(h, anim.dec);
+      clk.textContent = clock(Math.round(h * 6) * 10);
+      if (anim.t >= 1) stop();
+    });
+    ask($('.opts', qbox), 'long', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 태양이 지평선 위에 떠 있는 시간이 길어져요.' : '두 그래프의 모양을 견주어 보세요.'; upd(); });
+    upd();
+    return { setActive(on) { if (sky) sky.setActive(on); if (!on && anim) stop(); if (on) upd(); }, refresh: draw };
+  };
+
+  /* ---------- 체험 3: 태양 고도와 태양 에너지양 (손전등 모형실험) ---------- */
+  parts.light = function (root) {
+    const slider = $('#lightA'), out = $('#lightOut');
+    const view = makeView($('canvas.gl', root), { yaw: 22, pitch: 26, dist: 13.5, target: [0, 1.3, 0], min: 8, max: 22, aspect: 1.5 });
+    const BR = 1.45, LL = 4.6, STICK = 0.5;
+    let beam = null, spot = null, lamp = null, shadow = null, tablet = null;
+    if (view) {
+      const S = view.scene;
+      S.add(new T.HemisphereLight(0xffffff, 0xd8e2ea, 0.95));
+      const floor = new T.Mesh(new T.PlaneGeometry(14, 10), new T.MeshLambertMaterial({ color: 0xf4f7fa }));
+      floor.rotation.x = -Math.PI / 2; S.add(floor);
+      const pts = [];
+      for (let i = -7; i <= 7; i++) pts.push(V3(i, 0.004, -5), V3(i, 0.004, 5));
+      for (let j = -5; j <= 5; j++) pts.push(V3(-7, 0.004, j), V3(7, 0.004, j));
+      S.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: tok('line') })));
+
+      spot = new T.Mesh(new T.CircleGeometry(BR, 64), new T.MeshBasicMaterial({ color: '#ffd24a', transparent: true, depthWrite: false }));
+      spot.rotation.x = -Math.PI / 2; spot.position.y = 0.012; S.add(spot);
+      // 스마트 기기(센서는 가운데)
+      tablet = new T.Mesh(new T.BoxGeometry(2.2, 0.08, 1.4), new T.MeshLambertMaterial({ color: tok('shade') }));
+      tablet.position.set(0.55, 0.04, 0); S.add(tablet);
+      const sensor = new T.Mesh(new T.CircleGeometry(0.13, 24), new T.MeshBasicMaterial({ color: tok('sun') }));
+      sensor.rotation.x = -Math.PI / 2; sensor.position.set(-0.3, 0.085, 0); S.add(sensor);
+      const sl = label('센서', { bg: '#ffffff', color: tok('ink'), size: 0.36 }); sl.position.set(-0.3, 0.45, 0.55); S.add(sl);
+      // 빨판 달린 막대와 그림자
+      const st = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, STICK, 12), new T.MeshLambertMaterial({ color: tok('hot') }));
+      st.position.set(-0.3, STICK / 2, -1.05); S.add(st);
+      const sg = new T.PlaneGeometry(1, 0.11); sg.translate(0.5, 0, 0); sg.rotateX(-Math.PI / 2);
+      shadow = new T.Mesh(sg, new T.MeshBasicMaterial({ color: tok('shade'), transparent: true, opacity: 0.75 }));
+      shadow.position.set(-0.3, 0.02, -1.05); S.add(shadow);
+      // 손전등
+      lamp = new T.Group();
+      const body = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 1.3, 20), new T.MeshLambertMaterial({ color: tok('ink') }));
+      body.position.y = -0.95;
+      const head = new T.Mesh(new T.CylinderGeometry(0.5, 0.3, 0.5, 20), new T.MeshLambertMaterial({ color: tok('ink-2') }));
+      head.position.y = -0.25;
+      const lens = new T.Mesh(new T.CircleGeometry(0.46, 24), new T.MeshBasicMaterial({ color: '#fff3b0' }));
+      lens.rotation.x = -Math.PI / 2; lens.position.y = 0.005;
+      lamp.add(body, head, lens); S.add(lamp);
+      // 빛줄기(위 고리 → 바닥 타원)
+      const N = 48, pos = new Float32Array((N + 1) * 2 * 3), idx = [];
+      for (let i = 0; i < N; i++) { const a = i * 2, b = a + 1, c = a + 2, d = a + 3; idx.push(a, b, c, b, d, c); }
+      const bg = new T.BufferGeometry();
+      bg.setAttribute('position', new T.BufferAttribute(pos, 3)); bg.setIndex(idx);
+      beam = new T.Mesh(bg, new T.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.2, side: T.DoubleSide, depthWrite: false }));
+      beam.userData.N = N; S.add(beam);
+    }
+    let lo = false, hi = false, summer = false, winter = false;
+    function upd() {
+      const a = +slider.value, s = Math.sin(a * DEG), c = Math.cos(a * DEG);
+      out.textContent = a + '°';
+      $('#lightAng').textContent = a;
+      $('#lightSh').textContent = (STICK * 10 / Math.tan(a * DEG)).toFixed(1);
+      $('#lightLux').textContent = Math.round(100 * s);
+      $('#lightBar').style.width = Math.round(100 * s) + '%';
+      $('#lightArea').textContent = (1 / s).toFixed(1) + '배';
+      $('#areaBar').style.width = Math.round(100 / s / (1 / Math.sin(20 * DEG))) + '%';
+      if (a >= 70) hi = true;
+      if (a <= 30) lo = true;
+      todo(root, hi && lo && summer && winter ? 3 : hi && lo ? 2 : hi ? 1 : 0);
+      if (!view) return;
+      spot.scale.set(1 / s, 1, 1);          // 평면이 눕기 전 x축 = 바닥의 x축
+      spot.material.opacity = 0.25 + 0.7 * s;
+      shadow.scale.x = STICK / Math.tan(a * DEG);
+      const dir = V3(c, -s, 0);             // 빛이 나아가는 방향(왼쪽 위 → 가운데 바닥)
+      lamp.position.set(-LL * c, LL * s, 0);
+      lamp.quaternion.setFromUnitVectors(V3(0, 1, 0), dir);
+      const N = beam.userData.N, p = beam.geometry.attributes.position, u = V3(s, c, 0);
+      for (let i = 0; i <= N; i++) {
+        const th = i / N * Math.PI * 2, k = 0.46 / BR;
+        const tx = lamp.position.x + u.x * Math.cos(th) * BR * k, ty = lamp.position.y + u.y * Math.cos(th) * BR * k, tz = Math.sin(th) * BR * k;
+        p.setXYZ(i * 2, tx, ty, tz);
+        p.setXYZ(i * 2 + 1, Math.cos(th) * BR / s, 0.015, Math.sin(th) * BR);
+      }
+      p.needsUpdate = true;
+    }
+    slider.addEventListener('input', upd);
+    $$('button[data-a]', root).forEach((b) => b.addEventListener('click', () => {
+      slider.value = b.dataset.a;
+      if (b.dataset.a === '76') summer = true; else winter = true;
+      upd();
+    }));
+    upd();
+    return { setActive(on) { if (view) view.setActive(on); } };
+  };
+
+  /* ---------- 체험 4: 지구의 자전축 기울기와 공전 ---------- */
+  parts.orbit = function (root) {
+    const slider = $('#orbitP'), out = $('#orbitOut'), cv = $('#orbitPlot'), qbox = $('#orbitQ'), say = $('.say', qbox), playBtn = $('#orbitPlay');
+    const view = makeView($('canvas.gl', root), { yaw: 0, pitch: 34, dist: 19, target: [0, 0, 0], min: 11, max: 30, aspect: 1.5, pmin: 8, pmax: 88 });
+    const OR = 6, ER = 0.85, NREC = 72;
+    const recs = { 1: new Array(NREC).fill(false), 0: new Array(NREC).fill(false) };
+    let tilted = 1, prev = 0, anim = null, okUp = false, okTilt = false;
+    let earth = null, tiltG = null, globe = null, sunRay = null;
+    const POS = [['가', 0], ['나', 90], ['다', 180], ['라', 270]];
+    const theta = (s) => (90 + s) * DEG;                       // 가(뒤)에서 시작해 시계 반대 방향
+    const decAt = (s) => (tilted ? -TILT * Math.cos(theta(s)) : 0);
+    const decFor = (s, t) => (t ? -TILT * Math.cos(theta(s)) : 0);
+
+    if (view) {
+      const S = view.scene;
+      S.add(new T.AmbientLight(0xffffff, 0.32));
+      S.add(new T.PointLight(0xffffff, 1.5, 0, 0));
+      const stars = [];
+      for (let i = 0; i < 260; i++) { const a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1); stars.push(V3(60 * Math.sin(b) * Math.cos(a), 60 * Math.cos(b), 60 * Math.sin(b) * Math.sin(a))); }
+      S.add(new T.Points(new T.BufferGeometry().setFromPoints(stars), new T.PointsMaterial({ color: 0xffffff, size: 0.35, transparent: true, opacity: 0.7 })));
+      S.add(new T.Mesh(new T.SphereGeometry(0.8, 32, 20), new T.MeshBasicMaterial({ color: '#ffb92e' })));
+      S.add(glowSprite('#ffc94d', 4.6));
+      const sunL = label('태양', { color: '#ffffff', size: 0.7 }); sunL.position.set(0, 1.6, 0); S.add(sunL);
+      S.add(line(ring(OR, 0, 128), '#8fa6c4', 0.8));
+      POS.forEach((p) => {
+        const t = theta(p[1]), l = label(p[0], { bg: '#ffffff', color: tok('ink'), round: true, size: 0.72 });
+        l.position.set(Math.cos(t) * (OR + 1.5), 0, -Math.sin(t) * (OR + 1.5)); S.add(l);
+      });
+      // 지구: earth(공전 위치) > tiltG(자전축 기울기, 항상 같은 방향) > globe(자전)
+      earth = new T.Group(); tiltG = new T.Group(); earth.add(tiltG); S.add(earth);
+      const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+      const g = c.getContext('2d');
+      g.fillStyle = '#2f7fc4'; g.fillRect(0, 0, 512, 256);
+      g.fillStyle = '#58a868';
+      const land = (lon, lat, rx, ry) => { g.beginPath(); g.ellipse((lon + 180) / 360 * 512, (90 - lat) / 180 * 256, rx / 360 * 512, ry / 180 * 256, 0, 0, Math.PI * 2); g.fill(); };
+      land(60, 52, 62, 20); land(100, 30, 26, 14); land(20, 5, 20, 30); land(-100, 48, 30, 22); land(-60, -15, 16, 28); land(134, -25, 17, 11); land(-40, 73, 12, 8);
+      g.fillStyle = '#f2f6f8'; g.fillRect(0, 244, 512, 12);
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1;
+      for (let la = 30; la < 180; la += 30) { g.beginPath(); g.moveTo(0, la / 180 * 256); g.lineTo(512, la / 180 * 256); g.stroke(); }
+      for (let lo = 0; lo < 360; lo += 30) { g.beginPath(); g.moveTo(lo / 360 * 512, 0); g.lineTo(lo / 360 * 512, 256); g.stroke(); }
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 128); g.lineTo(512, 128); g.stroke();
+      const tex = new T.CanvasTexture(c);
+      globe = new T.Mesh(new T.SphereGeometry(ER, 40, 28), new T.MeshLambertMaterial({ map: tex }));
+      const kor = new T.Mesh(new T.SphereGeometry(0.075, 12, 8), new T.MeshBasicMaterial({ color: tok('hot') }));
+      const ku = (127 + 180) / 360 * Math.PI * 2;
+      kor.position.set(-ER * Math.cos(LAT) * Math.cos(ku), ER * Math.sin(LAT), ER * Math.cos(LAT) * Math.sin(ku));
+      globe.add(kor); tiltG.add(globe);
+      const axis = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, ER * 3, 8), new T.MeshBasicMaterial({ color: '#ffffff' }));
+      tiltG.add(axis);
+      const al = label('자전축', { color: '#ffffff', size: 0.5 }); al.position.set(0, ER * 1.5 + 0.35, 0); tiltG.add(al);
+      sunRay = line([V3(0, 0, 0), V3(1, 0, 0)], '#ffd24a', 0.6); S.add(sunRay);
+      view.onFrame((dt) => {
+        if (!reduce) globe.rotation.y += dt * 0.9;
+        if (!anim) return;
+        anim.t += dt / (reduce ? 4 : 9);
+        slider.value = Math.round(360 * Math.min(1, anim.t));
+        upd();
+        if (anim.t >= 1) { anim = null; playBtn.textContent = '공전시키기'; }
+      });
+    }
+    function draw() {
+      plot(cv, (g, w, h) => {
+        const L = 34, Rm = 12, Tm = 10, B = 26, x0 = L, x1 = w - Rm, y0 = h - B, y1 = Tm;
+        const X = (s) => x0 + s / 360 * (x1 - x0), Y = (d) => y0 + (d - 20) / 65 * (y1 - y0);
+        gridY(g, x0, x1, [29, 52, 76].map(Y));
+        g.textBaseline = 'middle'; g.textAlign = 'right'; g.fillStyle = tok('ink-2');
+        [29, 52, 76].forEach((d) => g.fillText(d + '°', x0 - 6, Y(d)));
+        g.textAlign = 'center'; g.textBaseline = 'top';
+        ['가', '나', '다', '라', '가'].forEach((n, i) => g.fillText(n, X(i * 90), y0 + 6));
+        [[0, tok('cold')], [1, tok('sun')]].forEach((sr) => {
+          g.strokeStyle = sr[1]; g.lineWidth = 3; g.beginPath();
+          let pen = false;
+          for (let i = 0; i <= NREC; i++) {
+            const on = recs[sr[0]][i % NREC] && (i < NREC || recs[sr[0]][NREC - 1]);
+            if (!on) { pen = false; continue; }
+            const x = X(i * 5), y = Y(noonAlt(decFor(i * 5, sr[0])));
+            if (pen) g.lineTo(x, y); else g.moveTo(x, y);
+            pen = true;
+          }
+          g.stroke();
+        });
+        const s = +slider.value;
+        g.fillStyle = tilted ? tok('sun') : tok('cold'); g.strokeStyle = tok('ink'); g.lineWidth = 2;
+        g.beginPath(); g.arc(X(s), Y(noonAlt(decAt(s))), 6, 0, Math.PI * 2); g.fill(); g.stroke();
+      });
+    }
+    function upd() {
+      const s = +slider.value, lo = Math.min(prev, s), hi = Math.max(prev, s);
+      for (let i = Math.ceil(lo / 5); i <= Math.floor(hi / 5); i++) recs[tilted][i % NREC] = true;
+      prev = s;
+      const dec = decAt(s), alt = noonAlt(dec), q = Math.round(s / 90) % 4;
+      out.textContent = s % 90 === 0 ? POS[q][0] + ' 위치' : POS[Math.floor(s / 90) % 4][0] + ' → ' + POS[(Math.floor(s / 90) + 1) % 4][0];
+      $('#orbitAlt').textContent = Math.round(alt);
+      $('#orbitSh').textContent = (2 / Math.tan(alt * DEG)).toFixed(1);
+      $('#orbitSeason').textContent = tilted ? ['봄', '여름', '가을', '겨울'][q] : '변화 없음';
+      if (view) {
+        const t = theta(s);
+        earth.position.set(Math.cos(t) * OR, 0, -Math.sin(t) * OR);
+        tiltG.rotation.z = tilted ? -TILT * DEG : 0;          // 북극이 +x(라 쪽)로 기운다
+        sunRay.geometry.setFromPoints([V3(0, 0, 0), earth.position.clone()]);
+      }
+      const full = (a) => a.filter(Boolean).length >= NREC - 2;
+      const d1 = full(recs[1]), d0 = full(recs[0]);
+      qbox.hidden = !(d1 && d0);
+      todo(root, d1 && d0 && okUp && okTilt ? 3 : d1 && d0 ? 2 : d1 ? 1 : 0);
+      draw();
+    }
+    slider.addEventListener('input', () => { anim = null; playBtn.textContent = '공전시키기'; upd(); });
+    playBtn.addEventListener('click', () => {
+      if (anim) { anim = null; playBtn.textContent = '공전시키기'; return; }
+      slider.value = 0; prev = 0; anim = { t: 0 }; playBtn.textContent = '멈추기';
+      if (!view) { slider.value = 360; upd(); anim = null; playBtn.textContent = '공전시키기'; }
+    });
+    $$('button[data-tilt]', root).forEach((b) => b.addEventListener('click', () => {
+      tilted = +b.dataset.tilt;
+      $$('button[data-tilt]', root).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      anim = null; playBtn.textContent = '공전시키기'; prev = +slider.value; upd();
+    }));
+    const fin = () => { if (okUp && okTilt) say.textContent = '맞았어요. 자전축이 기울어져 있어야 태양의 남중 고도가 달라져요.'; upd(); };
+    ask($('[data-q="up"]', qbox), 'same', (ok) => { okUp = okUp || ok; say.textContent = ok ? '맞았어요.' : '파란색 그래프의 모양을 보세요.'; fin(); });
+    ask($('[data-q="tilt"]', qbox), 'change', (ok) => { okTilt = okTilt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프의 모양을 보세요.'; fin(); });
+    upd();
+    return { setActive(on) { if (view) view.setActive(on); if (on) upd(); }, refresh: draw };
+  };
+
+  /* ---------- 확인 ---------- */
+  let pred = '';
+  const PRED = {
+    near: ['여름에는 지구가 태양에 더 가까워져서', '체험 4에서 지구와 태양 사이의 거리는 변하지 않았는데도 계절이 달라졌어요.'],
+    high: ['여름에는 태양이 더 높이 떠서', '맞아요. 태양의 남중 고도가 높아 일정한 면적의 지표면이 받는 태양 에너지양이 많아요.'],
+    hot: ['여름에는 태양이 더 뜨거워져서', '태양은 그대로예요. 달라지는 것은 태양의 남중 고도예요.'],
+  };
+  parts.check = function (root) {
+    ox(root);
+    return {
+      setActive(on) {
+        if (!on) return;
+        $('#predBack').textContent = pred ? '«' + PRED[pred][0] + '» → ' + PRED[pred][1] : '표지에서 아직 고르지 않았어요.';
+      },
+    };
+  };
+
+  /* ---------- 표지: 내 생각 고르기 ---------- */
+  $$('#pred .opt').forEach((b) => b.addEventListener('click', () => {
+    pred = b.dataset.v;
+    $$('#pred .opt').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('#predSay').textContent = '골랐어요. 마지막 장에서 다시 확인해요.';
+  }));
+
+  start(parts);
+})();
+</script>
+</body>
+</html>

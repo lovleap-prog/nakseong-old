@@ -57,3 +57,42 @@ ${app}</script>
     console.log(`${outDir}/${name}.html`, (page.length / 1024).toFixed(0) + ' KB');
   }
 }
+
+// 웹에 올리는 판(docs/): 첫 화면 + 단원마다 한 쪽. Three.js와 수업방(파이어베이스)은 따로 읽는다.
+// GitHub Pages가 이 폴더를 그대로 내보낸다.
+const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
+mkdirSync(at('./docs/'), { recursive: true });
+for (const f of ['index.html', 'room.js', 'firebase-config.js']) writeFileSync(at(`./docs/${f}`), read(`./src/web/${f}`));
+writeFileSync(at('./docs/three.min.js'), read('./node_modules/three/build/three.min.js'));
+for (const [name, TITLE] of Object.entries(LESSONS)) {
+  if (!existsSync(at(`./src/${name}/body.html`))) continue;
+  const extra = at(`./src/${name}/style.css`);
+  const css = css0 + (existsSync(extra) ? readFileSync(extra, 'utf8') : '');
+  const page = `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${TITLE}</title>
+${FONTS}
+<style>
+${css}</style>
+</head>
+<body data-lesson="${name}">
+${read(`./src/${name}/body.html`)}
+<script src="../three.min.js"></script>
+<script src="${SDK}app-compat.js"></script>
+<script src="${SDK}auth-compat.js"></script>
+<script src="${SDK}database-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../room.js"></script>
+<script>
+${core}
+${safe(read(`./src/${name}/app.js`))}</script>
+</body>
+</html>
+`;
+  mkdirSync(at(`./docs/${name}/`), { recursive: true });
+  writeFileSync(at(`./docs/${name}/index.html`), page);
+  console.log(`docs/${name}/index.html`, (page.length / 1024).toFixed(0) + ' KB');
+}

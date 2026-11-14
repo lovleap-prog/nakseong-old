@@ -178,6 +178,10 @@ td.wait { color: var(--line); }
 }
 @media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
 
+/* 평면(2D) 무대 */
+.view.flat { background: var(--paper); }
+.view canvas.flat2d { cursor: default; touch-action: auto; }
+
 /* 전기의 이용: 평면 무대와 습관 고르기 */
 .view.flat { background: var(--paper); }
 .view canvas.flat2d { cursor: default; touch-action: auto; }
@@ -625,6 +629,49 @@ window.Lesson = (function () {
     return pts;
   }
 
+  /* ---------- 평면 무대: 800×500 칸에 그리고 화면에 맞춰 줄인다 ---------- */
+  function flat(cv, draw, onTap) {
+    const g = cv.getContext('2d');
+    let active = false, raf = 0, last = 0, t = 0, k = 1, ox0 = 0, oy0 = 0;
+    function paint(dt) {
+      const w = cv.clientWidth, h = cv.clientHeight;
+      if (!w || !h) return;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.clearRect(0, 0, w, h);
+      k = Math.min(w / 800, h / 500); ox0 = (w - 800 * k) / 2; oy0 = (h - 500 * k) / 2;
+      g.translate(ox0, oy0); g.scale(k, k);
+      g.lineCap = 'round'; g.lineJoin = 'round';
+      draw(g, t, dt || 0);
+    }
+    function frame(now) {
+      if (!active) return;
+      const dt = Math.min(0.05, (now - last) / 1000 || 0);
+      last = now; t += dt;
+      paint(dt);
+      raf = requestAnimationFrame(frame);
+    }
+    if (onTap) cv.addEventListener('click', (e) => {
+      const r = cv.getBoundingClientRect();
+      onTap((e.clientX - r.left - ox0) / k, (e.clientY - r.top - oy0) / k);
+    });
+    return {
+      setActive(on) {
+        if (on === active) return;
+        active = on;
+        if (on) { last = performance.now(); raf = requestAnimationFrame(frame); } else cancelAnimationFrame(raf);
+      },
+    };
+  }
+
+  // 둥근 네모 길(채우거나 테두리를 그리기 전에 부른다)
+  function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  // 캔버스 글자. align 기본은 가운데
+  function text(g, s, x, y, size, color, align) { g.font = '700 ' + (size || 18) + 'px ' + FONT; g.fillStyle = color || tok('ink'); g.textAlign = align || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  // 받침에 맞춰 조사를 고른다: josa('깡통', '이', '가') → '깡통이'
+  const josa = (w, a, b) => w + ((w.charCodeAt(w.length - 1) - 0xAC00) % 28 ? a : b);
+
   /* ---------- 그래프 공용 ---------- */
   function plot(cv, draw) {
     const w = cv.clientWidth, h = cv.clientHeight;
@@ -800,7 +847,7 @@ window.Lesson = (function () {
     })();
   }
 
-  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start };
+  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, start };
 })();
 
 /* 6학년 2학기 과학 3단원 «전기의 이용» 수업 슬라이드.
@@ -808,51 +855,11 @@ window.Lesson = (function () {
    magnet(전자석의 성질)은 옆과 위에서 모두 봐야 해서 입체 화면으로 만든다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, line, V3, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, start } = window.Lesson;
   const parts = {};
-  // 받침에 맞춰 조사를 고른다: josa('깡통', '이', '가') → '깡통이'
-  const josa = (w, a, b) => w + ((w.charCodeAt(w.length - 1) - 0xAC00) % 28 ? a : b);
-
-  /* ---------- 평면 무대: 800×500 칸에 그리고 화면에 맞춰 줄인다 ---------- */
-  function flat(cv, draw, onTap) {
-    const g = cv.getContext('2d');
-    let active = false, raf = 0, last = 0, t = 0, k = 1, ox0 = 0, oy0 = 0;
-    function paint(dt) {
-      const w = cv.clientWidth, h = cv.clientHeight;
-      if (!w || !h) return;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      g.clearRect(0, 0, w, h);
-      k = Math.min(w / 800, h / 500); ox0 = (w - 800 * k) / 2; oy0 = (h - 500 * k) / 2;
-      g.translate(ox0, oy0); g.scale(k, k);
-      g.lineCap = 'round'; g.lineJoin = 'round';
-      draw(g, t, dt || 0);
-    }
-    function frame(now) {
-      if (!active) return;
-      const dt = Math.min(0.05, (now - last) / 1000 || 0);
-      last = now; t += dt;
-      paint(dt);
-      raf = requestAnimationFrame(frame);
-    }
-    if (onTap) cv.addEventListener('click', (e) => {
-      const r = cv.getBoundingClientRect();
-      onTap((e.clientX - r.left - ox0) / k, (e.clientY - r.top - oy0) / k);
-    });
-    return {
-      setActive(on) {
-        if (on === active) return;
-        active = on;
-        if (on) { last = performance.now(); raf = requestAnimationFrame(frame); } else cancelAnimationFrame(raf);
-      },
-    };
-  }
 
   /* ---------- 전기 부품 그림 ---------- */
   const C = { ink: tok('ink'), ink2: tok('ink-2'), line: tok('line'), paper: tok('paper'), sun: tok('sun'), hot: tok('hot'), cold: tok('cold'), shade: tok('shade'), ok: tok('ok') };
-  function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-  function text(g, s, x, y, size, color, align) { g.font = '700 ' + (size || 18) + 'px ' + FONT; g.fillStyle = color || C.ink; g.textAlign = align || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
   // 전지(끼우개 포함). plusLeft: (+)극이 왼쪽. 양 끝 단자는 x±62
   function battery(g, x, y, plusLeft) {
     g.lineWidth = 3; g.strokeStyle = C.ink;

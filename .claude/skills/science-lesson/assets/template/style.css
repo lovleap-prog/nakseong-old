@@ -1,0 +1,4 @@
+
+/* __NAME__: 이 단원에서만 쓰는 모양. 공통 모양은 src/common/style.css 에 있다. 색은 반드시 var(--이름) 으로 쓴다. */
+.view.flat { background: var(--paper); }
+.view canvas.flat2d { cursor: default; touch-action: auto; }

@@ -1,0 +1,137 @@
+<div class="app">
+<!-- 머리띠와 아래 넘기기 띠는 모든 단원이 같다. id 를 바꾸지 않는다. -->
+<header class="top">
+  <div class="unit"><span>__LABEL__</span><b>__NAME__</b></div>
+  <nav class="steps" id="steps" aria-label="장 차례"></nav>
+  <span class="roomcode" id="roomCode" hidden></span>
+  <button class="ghost" type="button" id="followBtn" aria-pressed="true" hidden>선생님 따라가는 중</button>
+  <button class="ghost" type="button" id="leadBtn" aria-pressed="false" hidden>수업 진행</button>
+  <button class="ghost" type="button" id="memoBtn" aria-pressed="false">선생님 메모</button>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- 1. 표지: 단원을 여는 질문 + 배울 것 + 내 생각 고르기(흔한 오개념을 보기로) + 단원을 상징하는 그림(SVG, 직접 그린다) -->
+<section class="slide cover" data-name="cover" data-label="표지">
+  <div class="txt">
+    <p class="kind">과학 00~00쪽 · 실험 관찰 00~00쪽</p>
+    <h1>TODO 단원을 여는 질문</h1>
+    <ol class="goals">
+      <li>TODO 교과서 단원 도입의 «이 단원을 배우면» 문장을 해요체로</li>
+      <li>TODO</li>
+    </ol>
+    <div class="pick" id="pred">
+      <h3>내 생각 고르기: TODO 질문</h3>
+      <div class="opts">
+        <button class="opt" type="button" data-v="a" aria-pressed="false">TODO 흔한 오개념</button>
+        <button class="opt" type="button" data-v="b" aria-pressed="false">TODO 과학적인 생각</button>
+        <button class="opt" type="button" data-v="c" aria-pressed="false">TODO 또 다른 오개념</button>
+      </div>
+      <p class="say" id="predSay" aria-live="polite">하나를 골라 보세요. 마지막 장에서 다시 확인해요.</p>
+    </div>
+    <div class="memo"><b>도입</b>TODO 답을 알려 주지 않고 어느 체험에서 스스로 고치게 되는지 적는다.</div>
+  </div>
+  <svg viewBox="0 0 520 330" role="img" aria-label="TODO 그림 설명">
+    <circle cx="260" cy="165" r="90" fill="var(--sun-soft)" stroke="var(--ink)" stroke-width="3"/>
+  </svg>
+</section>
+
+<!-- 2. 평면(2D) 체험 장의 본보기. 한 장 = 교과서 탐구 활동 하나. -->
+<section class="slide lab" data-name="flatlab" data-label="평면" hidden>
+  <div class="head">
+    <p class="kind">체험 1 · 과학 00~00쪽 · 실험 관찰 00~00쪽</p>
+    <h2>TODO 교과서 차시 제목(질문 꼴)</h2>
+    <div class="memo"><b>발문</b>TODO 발문 한두 개 · 실제 실험과 어떻게 이어 쓰는지 · 지도 유의점</div>
+  </div>
+  <div class="stage">
+    <div class="view flat">
+      <canvas class="flat2d" id="flatCv" aria-label="TODO 무엇을 그린 화면인지"></canvas>
+    </div>
+    <div class="ctrl">
+      <label for="flatX">TODO 바꿀 것</label>
+      <input type="range" id="flatX" min="0" max="100" step="1" value="20">
+      <output id="flatOut" for="flatX"></output>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>TODO 값 이름</span><b id="flatVal">0</b><small>cm</small></div>
+    </div>
+    <ol class="todo">
+      <li>TODO 처음 해 볼 조작</li>
+      <li>TODO 견주어 볼 조작</li>
+      <li>아래 물음에 답해요.</li>
+    </ol>
+    <div class="quest" id="flatQ" hidden>
+      <p>TODO 관찰한 것에서 답을 찾을 수 있는 물음</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a">TODO 보기</button><button class="opt" type="button" data-v="b">TODO 보기</button></div>
+      <p class="say" aria-live="polite"></p>
+    </div>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">TODO 교과서의 정리 문장을 해요체로</span></div>
+    <p class="fine">TODO 값의 출처와 단순화한 점(예: 길이는 이해를 돕기 위한 예)</p>
+  </div>
+</section>
+
+<!-- 3. 입체(3D) 체험 장의 본보기. 보는 방향을 바꿔야 이해되는 내용에만 쓴다. -->
+<section class="slide lab" data-name="spacelab" data-label="입체" hidden>
+  <div class="head">
+    <p class="kind">체험 2 · 과학 00~00쪽 · 실험 관찰 00~00쪽</p>
+    <h2>TODO 교과서 차시 제목(질문 꼴)</h2>
+    <div class="memo"><b>발문</b>TODO</div>
+  </div>
+  <div class="stage">
+    <div class="view">
+      <canvas class="gl" aria-label="TODO 무엇을 그린 화면인지. 끌어서 돌려 볼 수 있음"></canvas>
+      <p class="hint">빈 곳을 끌면 돌려 볼 수 있어요</p>
+      <p class="fallback">이 기기에서는 입체 화면을 띄울 수 없어요. 오른쪽 값으로 확인해요.</p>
+    </div>
+    <div class="ctrl">
+      <label for="spaceA">TODO 바꿀 것</label>
+      <input type="range" id="spaceA" min="0" max="90" step="1" value="30">
+      <output id="spaceOut" for="spaceA"></output>
+    </div>
+  </div>
+  <div class="side">
+    <div class="reads">
+      <div class="read" style="--c: var(--sun)"><span>TODO 값 이름</span><b id="spaceVal">0</b><small>°</small></div>
+    </div>
+    <ol class="todo">
+      <li>TODO</li>
+      <li>TODO</li>
+    </ol>
+    <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">TODO</span></div>
+    <p class="fine">TODO</p>
+  </div>
+</section>
+
+<!-- 마지막. 확인: ○× 4~6문제(○와 ×를 섞는다) + 표지의 생각 다시 보기 + 정리 + 생각 넓히기 -->
+<section class="slide check" data-name="check" data-label="확인" hidden>
+  <div class="head">
+    <p class="kind">정리 · 과학 00~00쪽</p>
+    <h2>확인하기</h2>
+    <div class="memo"><b>마무리</b>표지에서 고른 생각을 다시 보고, 생각이 바뀐 학생에게 바뀐 까닭을 말하게 합니다.</div>
+  </div>
+  <div>
+    <ul class="ox">
+      <li data-a="o"><p class="q">TODO 맞는 문장</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>TODO 한 줄 풀이</p></li>
+      <li data-a="x"><p class="q">TODO 틀린 문장</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>TODO 바르게 고친 문장</p></li>
+      <li data-a="o"><p class="q">TODO</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>TODO</p></li>
+      <li data-a="x"><p class="q">TODO</p><div class="bt"><button type="button" data-v="o" aria-label="맞다">○</button><button type="button" data-v="x" aria-label="틀리다">×</button></div><p class="why" hidden>TODO</p></li>
+    </ul>
+  </div>
+  <div class="sum">
+    <p class="score" aria-live="polite">문제를 풀어 보세요.</p>
+    <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
+    <div class="card" style="--c: var(--ok)"><b>TODO 단원의 핵심</b><p>TODO 교과서 «한눈에 정리»의 핵심 문장</p></div>
+    <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>TODO 교과서 «생각이 쑥쑥» 물음 하나</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button type="button" id="prev">← 이전</button>
+  <span id="pos"></span>
+  <button type="button" id="next">다음 →</button>
+</footer>
+</div>

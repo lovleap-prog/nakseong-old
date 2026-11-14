@@ -169,3 +169,7 @@ td.wait { color: var(--line); }
   .unit span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
+
+/* 평면(2D) 무대 */
+.view.flat { background: var(--paper); }
+.view canvas.flat2d { cursor: default; touch-action: auto; }

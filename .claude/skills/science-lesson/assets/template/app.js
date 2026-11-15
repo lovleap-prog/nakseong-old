@@ -3,7 +3,7 @@
    조각은 그 장을 처음 볼 때 한 번 만들어지고, 장이 보일 때만 setActive(true) 가 된다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const parts = {};
 
   /* ---------- 평면(2D) 체험의 본보기 ----------
@@ -29,11 +29,18 @@
       if (x >= 90) hi = true;
       sawBoth = lo && hi;
       qbox.hidden = !sawBoth;                              // 물음은 견줄 것을 다 본 뒤에 연다
-      todo(root, sawBoth && okQ ? 3 : sawBoth ? 2 : moved ? 1 : 0);
+      todo(root, sawBoth && okQ ? 3 : sawBoth ? 2 : moved ? 1 : 0);   // 예상을 골랐을 때만 «알게 된 것»이 열린다(공통 도구가 확인)
+      if (Math.abs(x - 50) <= 2) stamp(root);              // 도전: 숫자나 상태로 판정. 시연 중에는 찍히지 않는다
     }
     slider.addEventListener('input', () => { moved = true; upd(); });
     ask($('.opts', qbox), 'a', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요.' : '화면을 다시 살펴보세요.'; upd(); });
     upd();
+    // 보여 주기: 3~5단계. 말은 학생이 볼 결과를 한 문장으로, 동작은 학생이 할 조작과 같은 단추·막대로
+    demo(root, [
+      ['TODO 처음 모습을 설명하는 한 문장', (d) => d.slide(slider, 0, 800)],
+      ['TODO 바꾸면 무엇이 달라지는지', (d) => d.slide(slider, 100, 3000)],
+      ['TODO 이 장의 결론 한 문장', (d) => d.wait(600)],
+    ]);
     return { setActive: stage.setActive };
   };
 
@@ -61,12 +68,18 @@
       if (a <= 10) lo = true;
       if (a >= 80) hi = true;
       todo(root, lo && hi ? 2 : lo || hi ? 1 : 0);
+      if (a === 45) stamp(root);
       if (!view) return;
       box.rotation.z = -a * DEG;
       tag.set(a + '°');
     }
     slider.addEventListener('input', upd);
     upd();
+    demo(root, [
+      ['TODO', (d) => d.slide(slider, 0, 1000)],
+      ['TODO', (d) => d.slide(slider, 90, 3000)],
+      ['TODO', (d) => d.wait(600)],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); } };
   };
 

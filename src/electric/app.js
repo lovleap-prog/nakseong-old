@@ -3,7 +3,7 @@
    magnet(전자석의 성질)은 옆과 위에서 모두 봐야 해서 입체 화면으로 만든다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const parts = {};
 
   /* ---------- 전기 부품 그림 ---------- */
@@ -134,6 +134,7 @@
       const allG = Object.keys(CARDS).every((k) => guess[k]), allT = Object.keys(CARDS).every((k) => tested[k]);
       qbox.hidden = !allT;
       todo($('#cirBox1'), allT && okA && okB ? 3 : allT ? 2 : allG ? 1 : 0);
+      if (Object.keys(CARDS).every((k) => tested[k] && guess[k] === (CARDS[k].lit ? 'on' : 'off'))) stamp(root);
       todo($('#cirBox2'), ['plastic', 'rubber', 'metal'].filter((k) => rodDone[k]).length === 3 ? 3 : rodDone.rubber && rodDone.plastic ? 2 : rodDone.plastic ? 1 : 0);
       table();
     }
@@ -146,6 +147,15 @@
     ask($('[data-q="a"]', qbox), 'whole', (ok) => { okA = okA || ok; say.textContent = ok ? '맞았어요.' : '카드 나를 다시 살펴보세요.'; upd(); });
     ask($('[data-q="b"]', qbox), 'both', (ok) => { okB = okB || ok; say.textContent = ok ? '맞았어요.' : '카드 가, 다, 라는 전지의 어느 극에 연결되어 있나요?'; upd(); });
     upd();
+    const cardBtn = (k) => $('button[data-card="' + k + '"]', root), rodBtn = (k) => $('button[data-rod="' + k + '"]', root);
+    const showCard = (k) => async (d) => { d.press($('button[data-exp="1"]', root)); d.press(cardBtn(k)); await d.wait(900); d.press(swBtn); };
+    demo(root, [
+      ['카드 가: 전선이 전지의 (+)극에만 연결되어 있어요.', showCard('ga')],
+      ['카드 나: (+)극부터 (-)극까지 끊어진 곳 없이 연결되어 불이 켜져요.', showCard('na')],
+      ['카드 다: 두 전선이 모두 (+)극에 연결되고 (-)극에는 아무것도 없어요.', showCard('da')],
+      ['카드 라: 전선이 전지의 (-)극에만 연결되어 있어요.', showCard('ra')],
+      ['스위치 대신 막대를 넣어 봐요. 금속 막대에서만 불이 켜져요.', async (d) => { d.press($('button[data-exp="2"]', root)); for (const k of ['plastic', 'rubber', 'metal']) { await d.wait(900); d.press(rodBtn(k)); } }],
+    ]);
     return { setActive: stage.setActive };
   };
 
@@ -198,6 +208,7 @@
       const all = done.bulb && done.motor && done.buzzer;
       qbox.hidden = !all;
       todo(root, all && okQ ? 3 : all ? 2 : done.bulb ? 1 : 0);
+      if (closed && flip && part === 'bulb') stamp(root);
       hum();
     }
     function toggle() { closed = !closed; upd(); }
@@ -207,6 +218,15 @@
     $$('button[data-part]', root).forEach((b) => b.addEventListener('click', () => { part = b.dataset.part; closed = false; upd(); }));
     ask($('.opts', qbox), 'lt', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 전지 두 개를 직렬연결한 쪽이 더 밝아요.' : '두 전구의 밝기를 다시 견주어 보세요.'; upd(); });
     upd();
+    const partBtn = (k) => $('button[data-part="' + k + '"]', root);
+    const show = (k) => async (d) => { d.press(partBtn(k)); await d.wait(500); d.press(swBtn); };
+    demo(root, [
+      ['전구를 연결하고 스위치를 닫아요. 전지 두 개를 직렬연결한 쪽이 더 밝아요.', show('bulb')],
+      ['전동기로 바꾸면 전지 두 개 쪽이 더 빠르게 돌아요.', show('motor')],
+      ['버저로 바꾸면 전지 두 개 쪽의 소리가 더 커요.', show('buzzer')],
+      ['전지 하나의 방향을 바꾸면 같은 극끼리 마주 보아 전기가 흐르지 않아요.', async (d) => { await show('bulb')(d); await d.wait(900); if (!flip) d.press(flipBtn); }],
+      ['전지의 방향을 되돌려요.', async (d) => { if (flip) d.press(flipBtn); await d.wait(300); }],
+    ]);
     return { setActive(on) { stage.setActive(on); if (!on && closed) { closed = false; upd(); } } };
   };
 
@@ -309,6 +329,7 @@
       $('#magRings').textContent = closed && power ? HOLD[cells] : 0;
       $('#magPoles').textContent = closed ? (flip ? '왼쪽 N극 · 오른쪽 S극' : '왼쪽 S극 · 오른쪽 N극') : '나타나지 않아요';
       todo(root, seen.one && seen.two && seen.dirA && seen.dirB ? 3 : seen.one && seen.two ? 2 : seen.one ? 1 : 0);
+      if (closed && power && cells === 2) stamp(root);
       build();
     }
     swBtn.addEventListener('click', () => { closed = !closed; upd(); });
@@ -316,6 +337,14 @@
     $$('button[data-mode]', root).forEach((b) => b.addEventListener('click', () => { mode = b.dataset.mode; closed = false; upd(); }));
     $$('button[data-cells]', root).forEach((b) => b.addEventListener('click', () => { cells = +b.dataset.cells; upd(); }));
     upd();
+    const modeBtn = (k) => $('button[data-mode="' + k + '"]', root), cellBtn = (k) => $('button[data-cells="' + k + '"]', root);
+    demo(root, [
+      ['전지 한 개를 연결하고 스위치를 닫아요. 둥근 철 고리가 붙어요.', async (d) => { d.press(modeBtn('power')); d.press(cellBtn(1)); await d.wait(500); d.press(swBtn); }],
+      ['스위치를 열면 고리가 떨어져요. 전기가 흐를 때만 자석이 돼요.', async (d) => { await d.wait(600); d.press(swBtn); }],
+      ['전지 두 개를 직렬연결하면 고리가 더 많이 붙어요.', async (d) => { d.press(cellBtn(2)); await d.wait(500); d.press(swBtn); }],
+      ['위에서 보면: 스위치를 닫으면 나침반 바늘이 움직여요.', async (d) => { d.press(modeBtn('pole')); await d.wait(700); d.press(swBtn); }],
+      ['전지의 방향을 바꾸면 바늘이 반대로 돌아요. 전자석의 극이 바뀌었어요.', async (d) => { await d.wait(800); d.press(flipBtn); }],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); } };
   };
 
@@ -328,8 +357,8 @@
       { n: '깡통', iron: true, x: 305, w: 38, h: 46 }, { n: '나무토막', iron: false, x: 395, w: 58, h: 30 },
       { n: '볼트', iron: true, x: 485, w: 46, h: 18 },
     ];
-    let items = [], on = false, held = null, okQ = false, picked = false, note = '';
-    function reset() { items = START.map((s) => Object.assign({ y: GROUND - s.h, vy: 0, inBin: false }, s)); on = false; held = null; note = ''; slider.value = 120; upd(); }
+    let items = [], on = false, held = null, okQ = false, picked = false, note = '', presses = 0;
+    function reset() { items = START.map((s) => Object.assign({ y: GROUND - s.h, vy: 0, inBin: false }, s)); on = false; held = null; note = ''; presses = 0; slider.value = 120; upd(); }
     const delivered = () => items.filter((i) => i.inBin).length;
 
     function shape(g, it) {
@@ -372,9 +401,11 @@
       $('#craN').textContent = n;
       qbox.hidden = n < 3;
       todo(root, n >= 3 && okQ ? 3 : n >= 3 ? 2 : picked ? 1 : 0);
+      $('#craPress').textContent = presses;
+      if (n >= 3 && presses <= 8) stamp(root);
     }
     swBtn.addEventListener('click', () => {
-      on = !on;
+      on = !on; presses++;
       const mx = +slider.value;
       if (on) {
         const near = items.filter((i) => !i.inBin && Math.abs(i.x - mx) < 44).sort((a, b) => Math.abs(a.x - mx) - Math.abs(b.x - mx))[0];
@@ -389,6 +420,12 @@
     $('#craReset').addEventListener('click', reset);
     ask($('.opts', qbox), 'stick', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 전자석은 스위치를 열면 물체가 떨어져요.' : '영구 자석은 항상 자석의 성질이 나타나요.'; upd(); });
     reset();
+    demo(root, [
+      ['기중기를 못 위로 옮기고 스위치를 닫아요. 못이 전자석에 붙어요.', async (d) => { d.press($('#craReset')); await d.slide(slider, 130, 1200); d.press(swBtn); }],
+      ['상자 위로 옮긴 뒤 스위치를 열면 못이 떨어져요.', async (d) => { await d.slide(slider, 670, 1800); d.press(swBtn); }],
+      ['플라스틱병은 철이 아니어서 붙지 않아요.', async (d) => { await d.slide(slider, 215, 1500); d.press(swBtn); await d.wait(1200); d.press(swBtn); }],
+      ['깡통과 볼트도 같은 방법으로 옮겨요.', async (d) => { for (const [a, b] of [[305, 660], [485, 690]]) { await d.slide(slider, a, 1300); d.press(swBtn); await d.slide(slider, b, 1500); d.press(swBtn); } }],
+    ]);
     return { setActive: stage.setActive };
   };
 
@@ -425,6 +462,7 @@
         $('.q', li).appendChild(tag);
         $('#habEff').textContent = found.eff.join(' ') || '아직 찾지 못했어요.';
         $('#habSafe').textContent = found.safe.join(' ') || '아직 찾지 못했어요.';
+        if (found.eff.length + found.safe.length === DATA.length) stamp(root);
         $('#habScore').textContent = found.eff.length + found.safe.length < DATA.length ? (found.eff.length + found.safe.length) + ' / ' + DATA.length + ' 찾았어요.' : '모두 찾았어요. 우리 모둠의 전기 사용 생활 규칙을 정해 봐요.';
       }));
     });

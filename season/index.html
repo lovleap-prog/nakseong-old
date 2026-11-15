@@ -163,6 +163,32 @@ td.wait { color: var(--line); }
 .card p { margin: 2px 0 0; }
 .score { margin: 0; font: 400 22px/1.3 var(--f-display); }
 
+/* 예상하기 · 도전과 도장 · 시연 */
+.stage { position: relative; }
+.predict { background: var(--paper); border: 2px solid var(--sun); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.predict .pq { margin: 0; font: 400 19px/1.35 var(--f-display); }
+.predict .pq::before { content: "예상해 보기"; display: block; font: 700 13px/1.4 var(--f-body); color: var(--sun); letter-spacing: .04em; }
+.predict .pr { margin: 0; font-weight: 700; color: var(--ink-2); min-height: 1.4em; }
+.predict.done { border-color: var(--line); }
+.predict .opt:disabled { cursor: default; opacity: .55; }
+.predict .opt:disabled[aria-pressed="true"] { opacity: 1; }
+.veil { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; gap: 6px; padding: 16px; text-align: center; border-radius: 14px; background: rgba(230, 241, 249, .86); backdrop-filter: blur(2px); }
+.veil p { margin: 0; font: 400 clamp(24px, 3vw, 34px)/1.2 var(--f-display); }
+.veil span { font-weight: 700; color: var(--ink-2); }
+.veil .skip { margin-top: 8px; min-height: 40px; padding: 0 14px; border: 0; background: none; color: var(--ink-2); font-weight: 700; text-decoration: underline; }
+.learn .mine { display: none; margin-top: 6px; font-weight: 700; }
+.learn.open .mine { display: block; }
+.challenge { position: relative; background: var(--paper); border: 2px dashed var(--hot); border-radius: 12px; padding: 10px 12px 10px 14px; }
+.challenge b { display: block; font: 700 13px/1.4 var(--f-body); color: var(--hot); letter-spacing: .04em; }
+.challenge p { margin: 0; font-weight: 700; padding-right: 92px; }
+.challenge.done { border-style: solid; }
+.challenge .stamp { position: absolute; right: 10px; top: 50%; width: 84px; height: 84px; margin-top: -42px; display: grid; place-items: center; border: 4px double var(--hot); border-radius: 50%; color: var(--hot); font: 400 17px/1.1 var(--f-display); text-align: center; transform: rotate(-12deg); background: var(--paper); }
+.challenge.pop .stamp { animation: stampin .45s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes stampin { from { transform: rotate(-12deg) scale(2.2); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: 1; } }
+.steps button.stamped::after { content: "✓"; display: grid; place-items: center; width: 18px; height: 18px; margin-left: -2px; border-radius: 50%; background: var(--hot); color: var(--paper); font-size: 11px; }
+.btn[data-demo][aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.view .demo-say { position: absolute; left: 50%; bottom: 40px; z-index: 4; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); margin: 0; padding: 8px 16px; border-radius: 12px; background: var(--ink); color: var(--paper); font: 400 clamp(17px, 1.7vw, 22px)/1.35 var(--f-display); text-align: center; pointer-events: none; }
+
 @media (min-width: 901px) {
   .slide.lab { height: 100%; }
   .lab .side { overflow-y: auto; min-height: 0; padding-right: 4px; }
@@ -249,9 +275,15 @@ td.wait { color: var(--line); }
       <label for="dayT">시각</label>
       <input type="range" id="dayT" min="510" max="990" step="10" value="510">
       <output id="dayOut" for="dayT"></output>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">하루 동안 막대기의 그림자 길이는 어떻게 달라질까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">계속 짧아져요</button><button class="opt" type="button" data-v="b" aria-pressed="false">짧아졌다가 다시 길어져요</button><button class="opt" type="button" data-v="c" aria-pressed="false">계속 길어져요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="tabs">
       <button class="btn" type="button" data-mode="ex" aria-pressed="true">예시 값</button>
       <button class="btn" type="button" data-mode="my" aria-pressed="false">우리 반 측정값</button>
@@ -301,6 +333,7 @@ td.wait { color: var(--line); }
       <div class="card" style="--c: var(--sun)"><b>우리 반 측정에서 찾은 것</b><ul class="found" id="mySum"></ul></div>
       <div class="card" style="--c: var(--ok)"><b>정리해요 (실험 관찰 9쪽)</b><p>하루 동안 태양 고도, 그림자 길이, 기온은 어떻게 달라졌나요? 그래프의 모양을 보고 써 봅시다.</p></div>
     </div>
+    <div class="challenge"><b>도전</b><p>예시 값에서 그림자가 가장 짧아지는 시각을 찾아 시각 막대를 멈춰 보세요.</p></div>
     <p class="fine" id="dayFine"></p>
   </div>
 </section>
@@ -323,9 +356,15 @@ td.wait { color: var(--line); }
       <input type="range" id="yearM" min="0" max="11" step="1" value="0">
       <output id="yearOut" for="yearM"></output>
       <button class="btn go" type="button" id="yearPlay">하루 보내기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="a">
+      <p class="pq">태양의 남중 고도가 높은 달에는 낮의 길이가 어떨까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">길어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">짧아요</button><button class="opt" type="button" data-v="c" aria-pressed="false">상관없어요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>태양의 남중 고도</span><b id="yearAlt">0</b><small>°</small></div>
       <div class="read" style="--c: var(--cold)"><span>낮의 길이</span><b id="yearLen" class="sm">0</b></div>
@@ -346,6 +385,7 @@ td.wait { color: var(--line); }
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">태양의 남중 고도가 높아질수록 낮의 길이가 길어져요. 태양의 남중 고도가 높은 여름에는 낮의 길이가 길고, 남중 고도가 낮은 겨울에는 낮의 길이가 짧아요.</span></div>
+    <div class="challenge"><b>도전</b><p>남중할 때 그림자가 가장 긴 달을 찾아보세요.</p></div>
     <p class="fine">서울, 매월 21일을 계산한 값 · 막대기 길이 10 cm</p>
   </div>
 </section>
@@ -368,9 +408,15 @@ td.wait { color: var(--line); }
       <output id="lightOut" for="lightA"></output>
       <button class="btn" type="button" data-a="76"><span class="dot" style="--c: var(--hot)"></span>여름 남중 고도</button>
       <button class="btn" type="button" data-a="29"><span class="dot" style="--c: var(--cold)"></span>겨울 남중 고도</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">손전등을 눕혀서 비추면 센서가 받는 빛은 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">세져요</button><button class="opt" type="button" data-v="b" aria-pressed="false">약해져요</button><button class="opt" type="button" data-v="c" aria-pressed="false">그대로예요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>손전등과 스마트 기기가 이루는 각</span><b id="lightAng">0</b><small>°</small></div>
       <div class="read" style="--c: var(--shade)"><span>막대의 그림자 길이</span><b id="lightSh">0</b><small>cm</small></div>
@@ -387,6 +433,7 @@ td.wait { color: var(--line); }
       <li>여름과 겨울의 남중 고도 단추를 모두 눌러 견주어요.</li>
     </ol>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">손전등과 스마트 기기가 이루는 각이 클수록 센서가 받는 에너지양이 많아요. 이처럼 태양 고도가 높아질수록 일정한 면적의 지표면이 받는 태양 에너지양이 많아져요. 그래서 태양의 남중 고도가 높은 여름에 기온이 높아요.</span></div>
+    <div class="challenge"><b>도전</b><p>센서가 받는 빛의 세기를 50으로 맞춰 보세요.</p></div>
     <p class="fine">막대 길이 5 cm · 빛의 세기는 손전등을 똑바로 세웠을 때를 100으로 한 값</p>
   </div>
 </section>
@@ -412,9 +459,15 @@ td.wait { color: var(--line); }
       <input type="range" id="orbitP" min="0" max="360" step="1" value="0">
       <output id="orbitOut" for="orbitP"></output>
       <button class="btn go" type="button" id="orbitPlay">공전시키기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">지구의 자전축이 기울어지지 않고 똑바로 서 있다면 계절은 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">지금처럼 바뀌어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">바뀌지 않아요</button><button class="opt" type="button" data-v="c" aria-pressed="false">더 크게 바뀌어요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>우리나라 태양의 남중 고도</span><b id="orbitAlt">0</b><small>°</small></div>
       <div class="read" style="--c: var(--shade)"><span>측정기 그림자 길이</span><b id="orbitSh">0</b><small>cm</small></div>
@@ -437,6 +490,7 @@ td.wait { color: var(--line); }
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">계절의 변화가 생기는 까닭은 지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 지구의 위치에 따라 태양의 남중 고도와 낮의 길이, 일정한 면적의 지표면이 받는 태양 에너지양이 달라져요.</span></div>
+    <div class="challenge"><b>도전</b><p>자전축이 기울어진 채로, 우리나라가 겨울인 지구의 위치를 찾아보세요.</p></div>
     <p class="fine">태양과 지구의 크기, 거리는 실제와 다르게 나타냄 · 측정기 막대 길이 2 cm</p>
   </div>
 </section>
@@ -458,6 +512,7 @@ td.wait { color: var(--line); }
   </div>
   <div class="sum">
     <p class="score" id="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card stampcard" style="--c: var(--hot)"><b>받은 도장</b><p id="stampSum"></p><button class="btn" type="button" id="stampClear">도장 지우기</button></div>
     <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>계절의 변화가 생기는 까닭</b><p>지구의 자전축이 기울어진 채 태양 주위를 공전하기 때문이에요. 여름에는 태양의 남중 고도가 높아 일정한 면적의 지표면이 받는 태양 에너지양이 많아요.</p></div>
     <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>남반구에 있는 나라는 우리나라와 계절이 어떻게 다를까요?</p></div>
@@ -681,7 +736,137 @@ window.Lesson = (function () {
     const items = $$('.todo li', root);
     items.forEach((li, i) => li.classList.toggle('done', i < n));
     const learn = $('.learn', root);
-    if (learn) learn.classList.toggle('open', n >= items.length);
+    if (!learn) return;
+    const slide = root.closest('.slide') || root, pr = $('.predict', slide);
+    const picked = !pr || !!pr.dataset.picked;
+    learn.classList.toggle('open', n >= items.length && picked);
+    if (pr && picked) {
+      let mine = $('.mine', learn);
+      if (!mine) { mine = document.createElement('span'); mine.className = 'mine'; learn.appendChild(mine); }
+      const v = pr.dataset.picked, btn = $('.opt[data-v="' + v + '"]', pr);
+      mine.textContent = v === 'skip' ? '예상을 고르지 않고 해 봤어요.'
+        : '내 예상 «' + (btn ? btn.textContent : '') + '» → ' + (v === pr.dataset.answer ? '예상과 같았어요.' : '예상과 달랐어요. 무엇이 달랐는지 이야기해 봐요.');
+    }
+  }
+
+  /* ---------- 예상하기 ----------
+     체험 장의 .side 맨 위 <div class="predict" data-answer="정답 data-v">. 고르기 전에는 무대(.stage)를 가림막이 덮는다.
+     고른 뒤에는 바꿀 수 없다(먼저 생각하고 확인하는 차례를 지키려고). «예상 없이 해 보기»로 건너뛸 수 있다. */
+  function predict(slide) {
+    const pr = $('.predict', slide), stage = $('.stage', slide);
+    if (!pr) return;
+    const btns = $$('.opt', pr), note = $('.pr', pr);
+    let veil = null;
+    if (stage) {
+      veil = document.createElement('div');
+      veil.className = 'veil';
+      veil.innerHTML = '<p>먼저 예상해 보세요</p><span>«예상해 보기»에서 하나를 골라요</span><button type="button" class="skip">예상 없이 해 보기</button>';
+      stage.appendChild(veil);
+      // 좁은 화면에서는 예상하기가 아래에 있으니 가림막을 누르면 그리로 데려간다
+      veil.addEventListener('click', (e) => { if (!e.target.closest('.skip')) pr.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); });
+    }
+    const pick = (v) => {
+      pr.dataset.picked = v;
+      btns.forEach((b) => { b.setAttribute('aria-pressed', String(b.dataset.v === v)); b.disabled = true; });
+      if (note) note.textContent = v === 'skip' ? '예상하지 않고 시작했어요.' : '골랐어요. 이제 직접 해 보며 확인해요.';
+      pr.classList.add('done');
+      if (veil) veil.remove();
+      slide.dispatchEvent(new CustomEvent('predicted', { detail: v }));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+    if (veil) $('.skip', veil).addEventListener('click', () => pick('skip'));
+  }
+
+  /* ---------- 도전과 도장 ----------
+     <div class="challenge"><b>도전</b><p>목표</p></div>. 조각이 목표를 이루었을 때 stamp(root)를 부른다.
+     도장은 이 기기에 남고(단원마다), 위쪽 차례 단추에 ✓가 붙는다. 시연 중에는 찍히지 않는다. */
+  const STAMP_KEY = 'stamps:' + document.title;
+  let stamps = {};
+  try { stamps = JSON.parse(window.localStorage.getItem(STAMP_KEY) || '{}') || {}; } catch (e) { stamps = {}; }
+  const stampHooks = [];
+  function paintStamp(slide) {
+    const ch = $('.challenge', slide), on = !!stamps[slide.dataset.name];
+    if (ch) {
+      ch.classList.toggle('done', on);
+      let mark = $('.stamp', ch);
+      if (on && !mark) { mark = document.createElement('span'); mark.className = 'stamp'; mark.textContent = '참 잘했어요'; ch.appendChild(mark); }
+      if (!on && mark) mark.remove();
+    }
+    stampHooks.forEach((f) => f());
+  }
+  function stamp(root) {
+    if (demoing) return;
+    const slide = root.closest('.slide') || root, n = slide.dataset.name;
+    if (stamps[n]) return;
+    stamps[n] = 1;
+    try { window.localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) { /* 이 기기에만 못 남김 */ }
+    paintStamp(slide);
+    const ch = $('.challenge', slide);
+    if (ch && !reduce) { ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); }
+    if (ch) ch.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });   // 오른쪽 칸 아래에 있어도 도장이 보이게
+  }
+  function clearStamps() {
+    stamps = {};
+    try { window.localStorage.removeItem(STAMP_KEY); } catch (e) { /* 그대로 */ }
+    $$('.slide').forEach(paintStamp);
+  }
+
+  /* ---------- 시연(보여 주기) ----------
+     demo(root, [[말, async (d) => { … }], …]). .ctrl 의 <button class="btn" data-demo> 를 누르면 차례대로 실행한다.
+     d.slide(막대, 값, 밀리초) · d.press(단추) · d.wait(밀리초). 화면 위에 «1/4 말»이 뜬다.
+     다시 누르거나, 사람이 무대를 만지거나, 장을 떠나면 멈춘다. */
+  let demoing = false;
+  const demoStops = [];
+  function demo(root, steps) {
+    const btn = $('[data-demo]', root), view = $('.view', root);
+    if (!btn) return { stop() {} };
+    const say = document.createElement('p');
+    say.className = 'demo-say'; say.hidden = true; say.setAttribute('aria-live', 'polite');
+    if (view) view.appendChild(say);
+    let run = 0;
+    const label = btn.textContent;
+    function stop() {
+      run++;
+      demoing = false;
+      btn.textContent = label; btn.setAttribute('aria-pressed', 'false');
+      say.hidden = true;
+    }
+    demoStops.push(stop);
+    btn.setAttribute('aria-pressed', 'false');
+    btn.addEventListener('click', async () => {
+      if (btn.getAttribute('aria-pressed') === 'true') { stop(); return; }
+      demoStops.forEach((f) => f());
+      const id = ++run;
+      demoing = true;
+      btn.textContent = '■ 멈추기'; btn.setAttribute('aria-pressed', 'true');
+      say.hidden = false;
+      const alive = () => { if (id !== run) throw new Error('stop'); };
+      const wait = (ms) => new Promise((ok, no) => setTimeout(() => (id === run ? ok() : no(new Error('stop'))), reduce ? Math.min(ms, 300) : ms));
+      const d = {
+        wait,
+        press(el) { alive(); if (el && !el.disabled) el.click(); },
+        async slide(el, to, ms) {
+          alive();
+          const from = +el.value, n = reduce ? 1 : Math.max(1, Math.round((ms || 1500) / 40));
+          for (let i = 1; i <= n; i++) {
+            el.value = from + (to - from) * i / n;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            if (i < n) await wait(40);
+          }
+        },
+      };
+      try {
+        for (let i = 0; i < steps.length; i++) {
+          say.textContent = (i + 1) + '/' + steps.length + '  ' + steps[i][0];
+          await steps[i][1](d);
+          await wait(1600);
+        }
+      } catch (e) { /* 멈춤 */ }
+      if (id === run) stop();
+    });
+    // 사람이 무대나 조작 칸을 직접 만지면 시연을 멈춘다(프로그램이 누르는 것은 pointerdown이 없다)
+    root.addEventListener('pointerdown', (e) => { if (btn.getAttribute('aria-pressed') === 'true' && !btn.contains(e.target)) stop(); }, true);
+    return { stop };
   }
   // 고르는 물음: 맞히면 done(true)
   function ask(box, right, done) {
@@ -726,11 +911,33 @@ window.Lesson = (function () {
     b.setAttribute('aria-label', (i + 1) + '장 ' + s.dataset.label);
     b.addEventListener('click', () => go(i, true));
     steps.appendChild(b);
+    predict(s);
   });
+  // 도장: 차례 단추의 ✓, 확인 장의 «받은 도장» 칸
+  const withChallenge = slides.filter((s) => $('.challenge', s));
+  stampHooks.push(() => {
+    slides.forEach((s, k) => $$('button', steps)[k].classList.toggle('stamped', !!stamps[s.dataset.name]));
+    const sum = $('#stampSum');
+    if (sum) {
+      const got = withChallenge.filter((s) => stamps[s.dataset.name]);
+      sum.textContent = got.length + ' / ' + withChallenge.length + (got.length ? ' · ' + got.map((s) => s.dataset.label).join(', ') : '');
+    }
+  });
+  slides.forEach(paintStamp);
+  const clr = $('#stampClear');
+  if (clr) {
+    let armed = 0;
+    clr.addEventListener('click', () => {
+      if (!armed) { clr.textContent = '한 번 더 누르면 지워요'; armed = setTimeout(() => { armed = 0; clr.textContent = '도장 지우기'; }, 3000); return; }
+      clearTimeout(armed); armed = 0; clr.textContent = '도장 지우기';
+      clearStamps();
+    });
+  }
   function go(i, push) {
     i = clamp(i, 0, slides.length - 1);
     if (i === idx) return;
     if (idx >= 0 && live[names[idx]]) live[names[idx]].setActive(false);
+    demoStops.forEach((f) => f());
     idx = i;
     slides.forEach((s, k) => { s.hidden = k !== i; });
     $$('button', steps).forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
@@ -827,7 +1034,7 @@ window.Lesson = (function () {
     })();
   }
 
-  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, start };
+  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start };
 })();
 
 /* 6학년 2학기 과학 1단원 «계절의 변화» 수업 슬라이드.
@@ -835,7 +1042,7 @@ window.Lesson = (function () {
    입체 화면은 Three.js(전역 THREE), 그래프는 2D 캔버스. 좌표는 +x 동쪽, +y 위, +z 남쪽. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const LAT = 37.6 * DEG;      // 서울
   const NOON = 12.5;           // 우리나라에서 태양이 남중하는 시각(오후 12시 30분 무렵)
   const TILT = 23.5;
@@ -1120,6 +1327,15 @@ window.Lesson = (function () {
     ask($('[data-q="alt"]', qbox), '750', (ok) => { okAlt = okAlt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
     ask($('[data-q="temp"]', qbox), '870', (ok) => { okTemp = okTemp || ok; say.textContent = ok ? '맞았어요.' : '빨간색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
     rowsHtml(); summary(); setMode('ex');
+    slider.addEventListener('change', () => { if (mode === 'ex' && Math.abs(+slider.value - 750) <= 10) stamp(root); });
+    const exBtn = $('button[data-mode="ex"]', root);
+    demo(root, [
+      ['오전 9시 30분, 태양이 동쪽 낮은 곳에 있어 그림자가 길어요.', async (d) => { d.press(exBtn); await d.slide(slider, 570, 800); }],
+      ['시간이 지나 태양이 높아질수록 그림자가 짧아져요.', (d) => d.slide(slider, 750, 3500)],
+      ['오후 12시 30분 무렵 태양이 가장 높아요. 태양이 남중했다고 해요.', (d) => d.wait(800)],
+      ['오후에는 태양이 낮아지고 그림자가 다시 길어져요.', (d) => d.slide(slider, 930, 3500)],
+      ['기온은 오후 2시 30분 무렵에 가장 높아요. 세 그래프를 견주어 봐요.', (d) => d.slide(slider, 870, 1200)],
+    ]);
     return { setActive(on) { if (sky) sky.setActive(on); if (on) upd(); }, refresh: draw };
   };
 
@@ -1173,6 +1389,7 @@ window.Lesson = (function () {
       const all = rec.size === 12, both = played.has(3) && played.has(9);
       qbox.hidden = !(all && both);
       todo(root, okQ && all && both ? 3 : all && both ? 2 : all ? 1 : 0);
+      if (mo === 12 && rec.size >= 6) stamp(root);
       draw();
     }
     function stop() { anim = null; clk.hidden = true; playBtn.textContent = '하루 보내기'; upd(); }
@@ -1194,6 +1411,12 @@ window.Lesson = (function () {
     });
     ask($('.opts', qbox), 'long', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 태양이 지평선 위에 떠 있는 시간이 길어져요.' : '두 그래프의 모양을 견주어 보세요.'; upd(); });
     upd();
+    demo(root, [
+      ['6월 21일(여름): 태양이 높이 떠서 오래 머물러요.', async (d) => { await d.slide(slider, 3, 800); d.press(playBtn); await d.wait(5600); }],
+      ['12월 21일(겨울): 태양이 낮게 떠서 일찍 져요.', async (d) => { await d.slide(slider, 9, 800); d.press(playBtn); await d.wait(5600); }],
+      ['3월부터 다음 해 2월까지 차례로 기록해요.', async (d) => { await d.slide(slider, 0, 400); await d.slide(slider, 11, 4500); }],
+      ['남중 고도가 높은 달일수록 낮의 길이가 길어요.', (d) => d.wait(600)],
+    ]);
     return { setActive(on) { if (sky) sky.setActive(on); if (!on && anim) stop(); if (on) upd(); }, refresh: draw };
   };
 
@@ -1257,6 +1480,7 @@ window.Lesson = (function () {
       if (a >= 70) hi = true;
       if (a <= 30) lo = true;
       todo(root, hi && lo && summer && winter ? 3 : hi && lo ? 2 : hi ? 1 : 0);
+      if (Math.round(100 * s) === 50) stamp(root);
       if (!view) return;
       spot.scale.set(1 / s, 1, 1);          // 평면이 눕기 전 x축 = 바닥의 x축
       spot.material.opacity = 0.25 + 0.7 * s;
@@ -1280,6 +1504,12 @@ window.Lesson = (function () {
       upd();
     }));
     upd();
+    demo(root, [
+      ['손전등을 똑바로 세우면 빛이 좁은 곳에 모여요.', (d) => d.slide(slider, 90, 1500)],
+      ['여름의 남중 고도(76°)로 비추면 센서가 받는 빛이 세요.', (d) => d.slide(slider, 76, 1200)],
+      ['겨울의 남중 고도(29°)로 눕히면 같은 빛이 넓게 퍼져 약해져요.', (d) => d.slide(slider, 29, 2500)],
+      ['태양 고도가 낮을수록 일정한 면적이 받는 태양 에너지양이 적어요.', (d) => d.wait(600)],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); } };
   };
 
@@ -1388,6 +1618,7 @@ window.Lesson = (function () {
       const d1 = full(recs[1]), d0 = full(recs[0]);
       qbox.hidden = !(d1 && d0);
       todo(root, d1 && d0 && okUp && okTilt ? 3 : d1 && d0 ? 2 : d1 ? 1 : 0);
+      if (tilted && Math.abs(s - 270) <= 10) stamp(root);
       draw();
     }
     slider.addEventListener('input', () => { anim = null; playBtn.textContent = '공전시키기'; upd(); });
@@ -1405,6 +1636,14 @@ window.Lesson = (function () {
     ask($('[data-q="up"]', qbox), 'same', (ok) => { okUp = okUp || ok; say.textContent = ok ? '맞았어요.' : '파란색 그래프의 모양을 보세요.'; fin(); });
     ask($('[data-q="tilt"]', qbox), 'change', (ok) => { okTilt = okTilt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프의 모양을 보세요.'; fin(); });
     upd();
+    const tiltOn = $('button[data-tilt="1"]', root), tiltOff = $('button[data-tilt="0"]', root);
+    demo(root, [
+      ['자전축이 기울어진 채 지구를 한 바퀴 공전시켜요.', async (d) => { d.press(tiltOn); await d.slide(slider, 0, 300); await d.slide(slider, 360, 6000); }],
+      ['우리나라의 남중 고도가 76°에서 29°까지 달라져요. 그래서 계절이 생겨요.', (d) => d.wait(800)],
+      ['이번에는 자전축을 똑바로 세우고 공전시켜요.', async (d) => { d.press(tiltOff); await d.slide(slider, 0, 300); await d.slide(slider, 360, 6000); }],
+      ['남중 고도가 52°로 그대로예요. 계절이 생기지 않아요.', (d) => d.wait(800)],
+      ['자전축이 기울어진 경우로 돌아가요.', async (d) => { d.press(tiltOn); await d.slide(slider, 90, 800); }],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); if (on) upd(); }, refresh: draw };
   };
 

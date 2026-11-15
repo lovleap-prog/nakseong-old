@@ -5,8 +5,9 @@
      1. node build.mjs
      2. 구조 점검: 표지·체험 장·확인 장에 있어야 할 것(쪽수, 해 볼 일, 알게 된 것, 선생님 메모 …)
      3. 낱말 점검: lesson.json 의 "avoid" 낱말이 화면 글에 들어 있는지
-     4. 실행 점검: 장마다 막대를 끝까지 움직이고 단추를 모두 눌러 보며 오류·가로 넘침을 찾는다
-     5. 화면 찍기: <결과 폴더>/d-<번호>-<장>-a.png(처음) · -b.png(눌러 본 뒤) · m-<번호>-<장>.png(휴대폰)
+     4. 시연 점검: 체험 장마다 예상을 고르고 «보여 주기»를 끝까지 재생해 본다(오류, 멈춤, 시간)
+     5. 실행 점검: 장마다 막대를 끝까지 움직이고 단추를 모두 눌러 보며 오류·가로 넘침을 찾는다
+     6. 화면 찍기: <결과 폴더>/d-<번호>-<장>-a.png(처음, 예상 전) · -demo.png(시연 중) · -b.png(눌러 본 뒤) · m-<번호>-<장>.png(휴대폰)
    오류가 있으면 끝날 때 1을 돌려준다. 찍힌 화면은 반드시 직접 열어 본다(이 스크립트는 모양을 판단하지 못한다). */
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'), cp = require('child_process');
@@ -67,6 +68,16 @@ const bad = (m) => { problems.push(m); };
         if (!todos.length) res.push(`${n}: 해 볼 일(.todo)이 없어요.`);
         todos.forEach((t) => { const c = t.querySelectorAll('li').length; if (c < 2 || c > 4) res.push(`${n}: 해 볼 일은 2~4개로(지금 ${c}개).`); });
         if (!q('.learn .body')) res.push(`${n}: 알게 된 것(.learn .body)이 없어요.`);
+        if (!q('.challenge')) res.push(`${n}: 도전(.challenge)이 없어요.`);
+        if (!q('.ctrl [data-demo]')) res.push(`${n}: 보여 주기 단추(.ctrl 안 [data-demo])가 없어요.`);
+        const pr = q('.predict');
+        if (!pr) info.push(`${n}: 예상하기(.predict)가 없어요. 장 안에서 따로 예상을 받는 장(예: 예상 → 확인 표)이 아니면 넣어요.`);
+        else {
+          const vs = Array.from(pr.querySelectorAll('.opt')).map((b) => b.dataset.v);
+          if (vs.length < 2 || vs.length > 3) res.push(`${n}: 예상 보기는 2~3개로(지금 ${vs.length}개).`);
+          if (!vs.includes(pr.dataset.answer)) res.push(`${n}: .predict 의 data-answer(${pr.dataset.answer})가 보기의 data-v 에 없어요.`);
+          if (!pr.querySelector('.pq') || !pr.querySelector('.pr')) res.push(`${n}: .predict 안에 .pq(물음)와 .pr(알림 줄)이 있어야 해요.`);
+        }
         if (!q('.fine')) info.push(`${n}: 값의 출처·단순화 고지(.fine)가 없어요. 계산값·예시값을 썼다면 넣어요.`);
       }
       if (n === 'check') {
@@ -76,6 +87,7 @@ const bad = (m) => { problems.push(m); };
         const o = Array.from(items).filter((li) => li.dataset.a === 'o').length;
         if (items.length && (o === 0 || o === items.length)) res.push('check: 정답이 모두 ○이거나 모두 ×예요.');
         if (!q('#predBack')) res.push('check: 표지의 생각을 다시 보여 주는 칸(#predBack)이 없어요.');
+        if (!q('#stampSum') || !q('#stampClear')) res.push('check: 받은 도장 칸(#stampSum, #stampClear)이 없어요.');
       }
     });
     if (names.indexOf('check') !== names.length - 1) res.push('마지막 장은 확인(data-name="check")이어야 해요.');
@@ -93,6 +105,28 @@ const bad = (m) => { problems.push(m); };
     await d.click(`#steps button:nth-child(${i + 1})`);
     await d.waitForTimeout(700);
     await d.screenshot({ path: path.join(out, `d-${tag}-a.png`) });
+    const sel = `.slide[data-name="${n}"]`;
+    if (await d.locator(`${sel} .predict .opt`).count()) {
+      await d.locator(`${sel} .predict .opt`).first().click();
+      await d.waitForTimeout(200);
+      if (await d.locator(`${sel} .veil`).count()) bad(`${n}: 예상을 골랐는데 가림막이 남아 있어요.`);
+    } else if (await d.locator(`${sel} .veil`).count()) bad(`${n}: 예상하기가 없는데 가림막이 있어요.`);
+    const demoBtn = d.locator(`${sel} [data-demo]`);
+    if (await demoBtn.count()) {
+      const before = problems.length, t0 = Date.now();
+      await demoBtn.click();
+      await d.waitForTimeout(2500);
+      const sayOn = await d.locator(`${sel} .demo-say`).isVisible().catch(() => false);
+      if (!sayOn) bad(`${n}: 보여 주기를 눌렀는데 설명 줄(.demo-say)이 보이지 않아요.`);
+      await d.screenshot({ path: path.join(out, `d-${tag}-demo.png`) });
+      let ended = false;
+      while (Date.now() - t0 < 90000) { if ((await demoBtn.getAttribute('aria-pressed')) !== 'true') { ended = true; break; } await d.waitForTimeout(500); }
+      const secs = Math.round((Date.now() - t0) / 1000);
+      if (!ended) { bad(`${n}: 보여 주기가 90초 안에 끝나지 않아요.`); await demoBtn.click(); }
+      else notes.push(`${n}: 보여 주기 ${secs}초${problems.length > before ? ' (도중에 오류)' : ''}${secs > 60 ? ' (길어요. 줄여요)' : ''}`);
+      const stamped = await d.locator(`${sel} .challenge.done`).count();
+      if (stamped) bad(`${n}: 보여 주기만으로 도장이 찍혔어요(시연 중에는 찍히면 안 돼요).`);
+    }
     const r = await d.evaluate(async (name) => {
       const s = document.querySelector(`.slide[data-name="${name}"]`), wait = (ms) => new Promise((f) => setTimeout(f, ms));
       const fire = (el, type) => el.dispatchEvent(new Event(type, { bubbles: true }));
@@ -105,7 +139,7 @@ const bad = (m) => { problems.push(m); };
       }
       let clicks = 0;
       for (let round = 0; round < 3; round++) {                 // 눌러서 새로 생긴 단추까지 세 번 돈다
-        for (const b of Array.from(s.querySelectorAll('button'))) { if (clicks >= 80) break; if (!shown(b)) continue; b.click(); clicks++; await wait(40); }
+        for (const b of Array.from(s.querySelectorAll('button'))) { if (clicks >= 80) break; if (!shown(b) || b.hasAttribute('data-demo')) continue; b.click(); clicks++; await wait(40); }
       }
       for (const c of s.querySelectorAll('input[type="checkbox"]')) { if (shown(c)) { c.click(); c.click(); } }
       await wait(500);

@@ -3,7 +3,7 @@
    입체 화면은 Three.js(전역 THREE), 그래프는 2D 캔버스. 좌표는 +x 동쪽, +y 위, +z 남쪽. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const LAT = 37.6 * DEG;      // 서울
   const NOON = 12.5;           // 우리나라에서 태양이 남중하는 시각(오후 12시 30분 무렵)
   const TILT = 23.5;
@@ -288,6 +288,15 @@
     ask($('[data-q="alt"]', qbox), '750', (ok) => { okAlt = okAlt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
     ask($('[data-q="temp"]', qbox), '870', (ok) => { okTemp = okTemp || ok; say.textContent = ok ? '맞았어요.' : '빨간색 그래프에서 가장 높은 점을 찾아보세요.'; answered(); });
     rowsHtml(); summary(); setMode('ex');
+    slider.addEventListener('change', () => { if (mode === 'ex' && Math.abs(+slider.value - 750) <= 10) stamp(root); });
+    const exBtn = $('button[data-mode="ex"]', root);
+    demo(root, [
+      ['오전 9시 30분, 태양이 동쪽 낮은 곳에 있어 그림자가 길어요.', async (d) => { d.press(exBtn); await d.slide(slider, 570, 800); }],
+      ['시간이 지나 태양이 높아질수록 그림자가 짧아져요.', (d) => d.slide(slider, 750, 3500)],
+      ['오후 12시 30분 무렵 태양이 가장 높아요. 태양이 남중했다고 해요.', (d) => d.wait(800)],
+      ['오후에는 태양이 낮아지고 그림자가 다시 길어져요.', (d) => d.slide(slider, 930, 3500)],
+      ['기온은 오후 2시 30분 무렵에 가장 높아요. 세 그래프를 견주어 봐요.', (d) => d.slide(slider, 870, 1200)],
+    ]);
     return { setActive(on) { if (sky) sky.setActive(on); if (on) upd(); }, refresh: draw };
   };
 
@@ -341,6 +350,7 @@
       const all = rec.size === 12, both = played.has(3) && played.has(9);
       qbox.hidden = !(all && both);
       todo(root, okQ && all && both ? 3 : all && both ? 2 : all ? 1 : 0);
+      if (mo === 12 && rec.size >= 6) stamp(root);
       draw();
     }
     function stop() { anim = null; clk.hidden = true; playBtn.textContent = '하루 보내기'; upd(); }
@@ -362,6 +372,12 @@
     });
     ask($('.opts', qbox), 'long', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 태양이 지평선 위에 떠 있는 시간이 길어져요.' : '두 그래프의 모양을 견주어 보세요.'; upd(); });
     upd();
+    demo(root, [
+      ['6월 21일(여름): 태양이 높이 떠서 오래 머물러요.', async (d) => { await d.slide(slider, 3, 800); d.press(playBtn); await d.wait(5600); }],
+      ['12월 21일(겨울): 태양이 낮게 떠서 일찍 져요.', async (d) => { await d.slide(slider, 9, 800); d.press(playBtn); await d.wait(5600); }],
+      ['3월부터 다음 해 2월까지 차례로 기록해요.', async (d) => { await d.slide(slider, 0, 400); await d.slide(slider, 11, 4500); }],
+      ['남중 고도가 높은 달일수록 낮의 길이가 길어요.', (d) => d.wait(600)],
+    ]);
     return { setActive(on) { if (sky) sky.setActive(on); if (!on && anim) stop(); if (on) upd(); }, refresh: draw };
   };
 
@@ -425,6 +441,7 @@
       if (a >= 70) hi = true;
       if (a <= 30) lo = true;
       todo(root, hi && lo && summer && winter ? 3 : hi && lo ? 2 : hi ? 1 : 0);
+      if (Math.round(100 * s) === 50) stamp(root);
       if (!view) return;
       spot.scale.set(1 / s, 1, 1);          // 평면이 눕기 전 x축 = 바닥의 x축
       spot.material.opacity = 0.25 + 0.7 * s;
@@ -448,6 +465,12 @@
       upd();
     }));
     upd();
+    demo(root, [
+      ['손전등을 똑바로 세우면 빛이 좁은 곳에 모여요.', (d) => d.slide(slider, 90, 1500)],
+      ['여름의 남중 고도(76°)로 비추면 센서가 받는 빛이 세요.', (d) => d.slide(slider, 76, 1200)],
+      ['겨울의 남중 고도(29°)로 눕히면 같은 빛이 넓게 퍼져 약해져요.', (d) => d.slide(slider, 29, 2500)],
+      ['태양 고도가 낮을수록 일정한 면적이 받는 태양 에너지양이 적어요.', (d) => d.wait(600)],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); } };
   };
 
@@ -556,6 +579,7 @@
       const d1 = full(recs[1]), d0 = full(recs[0]);
       qbox.hidden = !(d1 && d0);
       todo(root, d1 && d0 && okUp && okTilt ? 3 : d1 && d0 ? 2 : d1 ? 1 : 0);
+      if (tilted && Math.abs(s - 270) <= 10) stamp(root);
       draw();
     }
     slider.addEventListener('input', () => { anim = null; playBtn.textContent = '공전시키기'; upd(); });
@@ -573,6 +597,14 @@
     ask($('[data-q="up"]', qbox), 'same', (ok) => { okUp = okUp || ok; say.textContent = ok ? '맞았어요.' : '파란색 그래프의 모양을 보세요.'; fin(); });
     ask($('[data-q="tilt"]', qbox), 'change', (ok) => { okTilt = okTilt || ok; say.textContent = ok ? '맞았어요.' : '주황색 그래프의 모양을 보세요.'; fin(); });
     upd();
+    const tiltOn = $('button[data-tilt="1"]', root), tiltOff = $('button[data-tilt="0"]', root);
+    demo(root, [
+      ['자전축이 기울어진 채 지구를 한 바퀴 공전시켜요.', async (d) => { d.press(tiltOn); await d.slide(slider, 0, 300); await d.slide(slider, 360, 6000); }],
+      ['우리나라의 남중 고도가 76°에서 29°까지 달라져요. 그래서 계절이 생겨요.', (d) => d.wait(800)],
+      ['이번에는 자전축을 똑바로 세우고 공전시켜요.', async (d) => { d.press(tiltOff); await d.slide(slider, 0, 300); await d.slide(slider, 360, 6000); }],
+      ['남중 고도가 52°로 그대로예요. 계절이 생기지 않아요.', (d) => d.wait(800)],
+      ['자전축이 기울어진 경우로 돌아가요.', async (d) => { d.press(tiltOn); await d.slide(slider, 90, 800); }],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); if (on) upd(); }, refresh: draw };
   };
 

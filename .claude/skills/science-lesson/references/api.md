@@ -1,6 +1,6 @@
 # 공통 도구와 틀
 
-차례: 폴더 · 장의 HTML 틀 · 조각(part) · 2D 무대 · 3D 무대 · 그래프 · 해 볼 일과 물음 · 색 토큰 · 끝까지 해 보기
+차례: 폴더 · 장의 HTML 틀 · 조각(part) · 2D 무대 · 3D 무대 · 그래프 · 해 볼 일과 물음 · 예상·도전·보여 주기 · 색 토큰 · 끝까지 해 보기
 
 ## 폴더
 
@@ -42,17 +42,24 @@ build.mjs              묶기. src 아래에서 lesson.json 이 있는 폴더를
   <div class="ctrl">
     <label for="x">이름</label><input type="range" id="x" …><output id="xOut" for="x"></output>
     <button class="btn go" type="button">주된 동작</button>     <!-- 주황 -->
+    <button class="btn" type="button" data-demo>▶ 보여 주기</button>   <!-- .ctrl 맨 끝 -->
     <button class="btn" type="button" aria-pressed="false">고르기</button>
     <label class="chk"><input type="checkbox" id="…"> 선택</label>
   </div>
 </div>
 <div class="side">
+  <div class="predict" data-answer="b">                   <!-- 맨 위. 고르기 전에는 .stage 를 가림막이 덮는다 -->
+    <p class="pq">물음</p>
+    <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">보기</button>…</div>
+    <p class="pr" aria-live="polite"></p>
+  </div>
   <div class="reads"><div class="read" style="--c: var(--sun)"><span>이름</span><b id="…">0</b><small>단위</small></div></div>
   <div class="plot"><ul class="legend"><li style="--c: var(--sun)">이름</li></ul><canvas id="…"></canvas></div>
   <div class="tablewrap"><table>…</table></div>
   <ol class="todo"><li>…</li></ol>
   <div class="quest" id="…Q" hidden><p>물음</p><div class="opts row"><button class="opt" data-v="a">보기</button></div><p class="say" aria-live="polite"></p></div>
   <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">…</span></div>
+  <div class="challenge"><b>도전</b><p>목표</p></div>
   <div class="card" style="--c: var(--cold)"><b>제목</b><p>…</p></div>
   <p class="fine">값의 출처, 단순화한 점</p>
 </div>
@@ -135,6 +142,23 @@ josa('깡통', '이', '가');                    // '깡통이'
 - 물음 상자는 견줄 것을 다 본 뒤에 `hidden`을 푼다
 - 틀렸을 때의 말은 화면의 어디를 다시 보면 되는지 알려 준다(«주황색 그래프에서 가장 높은 점을 찾아보세요»)
 
+## 예상·도전·보여 주기
+
+```js
+stamp(root);                                // 도전을 이뤘을 때. 한 번만 찍히고, 시연 중에는 무시된다
+demo(root, [                                // .ctrl 의 [data-demo] 단추에 시연을 붙인다
+  ['화면 아래에 뜰 한 문장', async (d) => { d.press(단추); await d.slide(막대, 값, 밀리초); await d.wait(밀리초); }],
+  …
+]);
+```
+
+- 예상해 보기는 HTML만 쓰면 공통 도구가 알아서 붙인다(가림막, 고른 뒤 잠금, «알게 된 것»에 «내 예상 … → 같았어요/달랐어요»). `todo()`는 예상을 고른 뒤에만 «알게 된 것»을 연다
+- 장 안의 조각이 예상을 고른 순간을 알아야 하면 `root.addEventListener('predicted', (e) => e.detail)`
+- 도장은 이 기기의 브라우저에 단원마다 남고(`localStorage`, 열쇠는 문서 제목), 위쪽 차례 단추에 ✓가 붙는다. 확인 장의 `#stampSum`·`#stampClear`가 «받은 도장 n / m»과 지우기를 맡는다
+- `demo`의 단계 사이에는 1.6초 쉼이 저절로 들어간다. 다시 누르기, 사람이 화면을 만지기, 장 넘기기 중 하나면 멈춘다. 움직임 줄이기 설정에서는 기다림이 짧아진다
+- `d.press`는 프로그램이 누르는 것이라 시연을 멈추지 않는다. 시연 안에서 상태를 읽어 분기해도 된다(`if (!flip) d.press(flipBtn)`)
+- 시연을 시작하기 전에 필요한 모드·카드로 돌려놓는 것을 첫 단계에 넣는다(학생이 무엇을 하다 왔든 같은 시연이 되게)
+
 ## 색 토큰
 
 `--sky`(바탕) `--paper`(칸) `--ink`(글·테두리) `--ink-2`(흐린 글) `--line`(눈금) `--sun`(강조·주황) `--sun-soft` `--hot`(빨강) `--cold`(파랑) `--leaf`(초록) `--ground`(땅) `--shade`(그림자·어두운 회색) `--ok` `--ok-soft` `--no-soft`
@@ -155,9 +179,12 @@ const { chromium } = require('playwright');
   await p.route('**/fonts.g*/**', (r) => r.abort());
   await p.goto('file:///…/<id>/index.html#<data-name>');
   const setR = (sel, v) => p.evaluate(([s, v]) => { const e = document.querySelector(s); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, [sel, v]);
+  await p.click('[data-name="<data-name>"] .predict .opt[data-v="b"]');   // 예상 먼저(가림막이 걷힌다)
   await setR('#flatX', 5); await setR('#flatX', 95);         // 해 볼 일 1, 2
   await p.click('#flatQ [data-v="a"]');                       // 물음
   console.log('열림:', await p.locator('[data-name="<data-name>"] .learn.open').count());
+  await setR('#flatX', 50);                                   // 도전
+  console.log('도장:', await p.locator('[data-name="<data-name>"] .challenge.done').count());
   await p.screenshot({ path: '…/done.png' });
   await b.close();
 })();

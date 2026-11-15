@@ -163,6 +163,32 @@ td.wait { color: var(--line); }
 .card p { margin: 2px 0 0; }
 .score { margin: 0; font: 400 22px/1.3 var(--f-display); }
 
+/* 예상하기 · 도전과 도장 · 시연 */
+.stage { position: relative; }
+.predict { background: var(--paper); border: 2px solid var(--sun); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.predict .pq { margin: 0; font: 400 19px/1.35 var(--f-display); }
+.predict .pq::before { content: "예상해 보기"; display: block; font: 700 13px/1.4 var(--f-body); color: var(--sun); letter-spacing: .04em; }
+.predict .pr { margin: 0; font-weight: 700; color: var(--ink-2); min-height: 1.4em; }
+.predict.done { border-color: var(--line); }
+.predict .opt:disabled { cursor: default; opacity: .55; }
+.predict .opt:disabled[aria-pressed="true"] { opacity: 1; }
+.veil { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; gap: 6px; padding: 16px; text-align: center; border-radius: 14px; background: rgba(230, 241, 249, .86); backdrop-filter: blur(2px); }
+.veil p { margin: 0; font: 400 clamp(24px, 3vw, 34px)/1.2 var(--f-display); }
+.veil span { font-weight: 700; color: var(--ink-2); }
+.veil .skip { margin-top: 8px; min-height: 40px; padding: 0 14px; border: 0; background: none; color: var(--ink-2); font-weight: 700; text-decoration: underline; }
+.learn .mine { display: none; margin-top: 6px; font-weight: 700; }
+.learn.open .mine { display: block; }
+.challenge { position: relative; background: var(--paper); border: 2px dashed var(--hot); border-radius: 12px; padding: 10px 12px 10px 14px; }
+.challenge b { display: block; font: 700 13px/1.4 var(--f-body); color: var(--hot); letter-spacing: .04em; }
+.challenge p { margin: 0; font-weight: 700; padding-right: 92px; }
+.challenge.done { border-style: solid; }
+.challenge .stamp { position: absolute; right: 10px; top: 50%; width: 84px; height: 84px; margin-top: -42px; display: grid; place-items: center; border: 4px double var(--hot); border-radius: 50%; color: var(--hot); font: 400 17px/1.1 var(--f-display); text-align: center; transform: rotate(-12deg); background: var(--paper); }
+.challenge.pop .stamp { animation: stampin .45s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes stampin { from { transform: rotate(-12deg) scale(2.2); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: 1; } }
+.steps button.stamped::after { content: "✓"; display: grid; place-items: center; width: 18px; height: 18px; margin-left: -2px; border-radius: 50%; background: var(--hot); color: var(--paper); font-size: 11px; }
+.btn[data-demo][aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.view .demo-say { position: absolute; left: 50%; bottom: 40px; z-index: 4; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); margin: 0; padding: 8px 16px; border-radius: 12px; background: var(--ink); color: var(--paper); font: 400 clamp(17px, 1.7vw, 22px)/1.35 var(--f-display); text-align: center; pointer-events: none; }
+
 @media (min-width: 901px) {
   .slide.lab { height: 100%; }
   .lab .side { overflow-y: auto; min-height: 0; padding-right: 4px; }
@@ -274,6 +300,7 @@ td.wait { color: var(--line); }
       <button class="btn" type="button" data-exp="2" aria-pressed="false">실험 2 전기가 흐르는 물질</button>
       <button class="btn go" type="button" id="cirSw">스위치 닫기</button>
       <output id="cirOut" aria-live="polite"></output>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
@@ -312,6 +339,7 @@ td.wait { color: var(--line); }
       </ol>
       <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">금속과 같이 전기가 잘 흐르는 물질을 도체, 플라스틱·고무·종이·유리와 같이 전기가 잘 흐르지 않는 물질을 부도체라고 해요.</span></div>
     </div>
+    <div class="challenge"><b>도전</b><p>네 카드의 예상을 모두 맞혀 보세요.</p></div>
     <p class="fine">전구(1.5 V), 전지(1.5 V) 한 개를 연결한 전기 회로</p>
   </div>
 </section>
@@ -335,9 +363,15 @@ td.wait { color: var(--line); }
       <button class="btn go" type="button" id="serSw">스위치 닫기</button>
       <button class="btn" type="button" id="serFlip" aria-pressed="false">전지 방향 바꾸기</button>
       <label class="chk"><input type="checkbox" id="serSound"> 버저 소리 듣기</label>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="a">
+      <p class="pq">전지 두 개를 직렬연결하면 전구의 밝기는 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">더 밝아요</button><button class="opt" type="button" data-v="b" aria-pressed="false">같아요</button><button class="opt" type="button" data-v="c" aria-pressed="false">더 어두워요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>전기 부품</th><th>전지 한 개</th><th>전지 두 개 직렬연결</th></tr></thead>
@@ -355,6 +389,7 @@ td.wait { color: var(--line); }
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전지 두 개를 연결할 때 한 전지의 (+)극을 다른 전지의 (-)극에 연결하는 방법을 전지의 직렬연결이라고 해요. 전지 한 개를 연결한 전기 회로의 전구보다 전지 두 개를 직렬연결한 전기 회로의 전구가 더 밝아요.</span></div>
+    <div class="challenge"><b>도전</b><p>전지가 두 개인데도 전구에 불이 켜지지 않게 만들어 보세요.</p></div>
     <p class="fine">전구·전동기·버저는 3.0 V용, 전지는 1.5 V</p>
   </div>
 </section>
@@ -382,9 +417,15 @@ td.wait { color: var(--line); }
         <button class="btn" type="button" data-cells="2" aria-pressed="false">전지 두 개 직렬연결</button>
       </span>
       <button class="btn" type="button" id="magFlip" aria-pressed="false" hidden>전지 방향 바꾸기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">스위치를 열어 전기가 흐르지 않으면 전자석에 붙은 철 고리는 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">그대로 붙어 있어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">떨어져요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>전기가</span><b id="magOn" class="sm">흐르지 않아요</b></div>
       <div class="read" style="--c: var(--shade)" id="magRingBox"><span>붙은 둥근 철 고리</span><b id="magRings">0</b><small>개</small></div>
@@ -406,6 +447,7 @@ td.wait { color: var(--line); }
         </tbody>
       </table>
     </div>
+    <div class="challenge"><b>도전</b><p>전자석에 둥근 철 고리를 7개 붙여 보세요.</p></div>
     <p class="fine">붙는 고리의 개수는 이해를 돕기 위한 예 · 나침반의 빨간 쪽이 N극</p>
   </div>
 </section>
@@ -425,12 +467,19 @@ td.wait { color: var(--line); }
       <input type="range" id="craX" min="60" max="740" step="2" value="120">
       <button class="btn go" type="button" id="craSw">스위치 닫기</button>
       <button class="btn" type="button" id="craReset">다시 하기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">전자석 기중기로 플라스틱병을 옮길 수 있을까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">옮길 수 있어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">옮길 수 없어요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>전자석</span><b id="craOn" class="sm">꺼짐</b></div>
       <div class="read" style="--c: var(--ok)"><span>상자에 옮긴 철 물체</span><b id="craN">0</b><small>/ 3개</small></div>
+      <div class="read" style="--c: var(--hot)"><span>스위치 누른 횟수</span><b id="craPress">0</b><small>번</small></div>
     </div>
     <ol class="todo">
       <li>기중기를 물체 위로 옮기고 스위치를 닫아요.</li>
@@ -443,6 +492,7 @@ td.wait { color: var(--line); }
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전자석 기중기는 전기가 흐를 때만 자석이 되는 성질을 이용해 철로 만든 무거운 물체를 붙였다 뗄 수 있어요.</span></div>
+    <div class="challenge"><b>도전</b><p>스위치를 8번 이하로 눌러 철로 만든 물체 3개를 모두 상자에 옮겨 보세요.</p></div>
     <div class="card" style="--c: var(--cold)"><b>전자석을 사용하는 다른 예</b><p>선풍기: 전자석을 이용한 전동기가 회전하며 바람을 일으켜요. 스피커: 영구 자석과 전자석이 밀고 당기는 힘으로 막이 떨리며 소리가 나요. 전기 자동차: 전자석을 이용해 바퀴가 회전해요.</p></div>
   </div>
 </section>
@@ -456,6 +506,7 @@ td.wait { color: var(--line); }
   <div><ul class="ox habits" id="habits"></ul></div>
   <div class="sum">
     <p class="score" id="habScore" aria-live="polite">상황마다 알맞은 행동을 골라 보세요.</p>
+    <div class="challenge"><b>도전</b><p>여덟 가지 상황에서 알맞은 행동을 모두 찾아보세요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>효율적으로 사용해요</b><p id="habEff">아직 찾지 못했어요.</p></div>
     <div class="card" style="--c: var(--hot)"><b>안전하게 사용해요</b><p id="habSafe">아직 찾지 못했어요.</p></div>
   </div>
@@ -478,6 +529,7 @@ td.wait { color: var(--line); }
   </div>
   <div class="sum">
     <p class="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card stampcard" style="--c: var(--hot)"><b>받은 도장</b><p id="stampSum"></p><button class="btn" type="button" id="stampClear">도장 지우기</button></div>
     <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>손전등의 스위치</b><p>스위치를 닫으면 전기 회로가 연결되어 전기가 흐르고, 전구에 불이 켜져요.</p></div>
     <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>새로 산 마우스의 전지 칸에 비닐이 끼워져 있는 까닭은 무엇일까요?</p></div>
@@ -701,7 +753,137 @@ window.Lesson = (function () {
     const items = $$('.todo li', root);
     items.forEach((li, i) => li.classList.toggle('done', i < n));
     const learn = $('.learn', root);
-    if (learn) learn.classList.toggle('open', n >= items.length);
+    if (!learn) return;
+    const slide = root.closest('.slide') || root, pr = $('.predict', slide);
+    const picked = !pr || !!pr.dataset.picked;
+    learn.classList.toggle('open', n >= items.length && picked);
+    if (pr && picked) {
+      let mine = $('.mine', learn);
+      if (!mine) { mine = document.createElement('span'); mine.className = 'mine'; learn.appendChild(mine); }
+      const v = pr.dataset.picked, btn = $('.opt[data-v="' + v + '"]', pr);
+      mine.textContent = v === 'skip' ? '예상을 고르지 않고 해 봤어요.'
+        : '내 예상 «' + (btn ? btn.textContent : '') + '» → ' + (v === pr.dataset.answer ? '예상과 같았어요.' : '예상과 달랐어요. 무엇이 달랐는지 이야기해 봐요.');
+    }
+  }
+
+  /* ---------- 예상하기 ----------
+     체험 장의 .side 맨 위 <div class="predict" data-answer="정답 data-v">. 고르기 전에는 무대(.stage)를 가림막이 덮는다.
+     고른 뒤에는 바꿀 수 없다(먼저 생각하고 확인하는 차례를 지키려고). «예상 없이 해 보기»로 건너뛸 수 있다. */
+  function predict(slide) {
+    const pr = $('.predict', slide), stage = $('.stage', slide);
+    if (!pr) return;
+    const btns = $$('.opt', pr), note = $('.pr', pr);
+    let veil = null;
+    if (stage) {
+      veil = document.createElement('div');
+      veil.className = 'veil';
+      veil.innerHTML = '<p>먼저 예상해 보세요</p><span>«예상해 보기»에서 하나를 골라요</span><button type="button" class="skip">예상 없이 해 보기</button>';
+      stage.appendChild(veil);
+      // 좁은 화면에서는 예상하기가 아래에 있으니 가림막을 누르면 그리로 데려간다
+      veil.addEventListener('click', (e) => { if (!e.target.closest('.skip')) pr.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); });
+    }
+    const pick = (v) => {
+      pr.dataset.picked = v;
+      btns.forEach((b) => { b.setAttribute('aria-pressed', String(b.dataset.v === v)); b.disabled = true; });
+      if (note) note.textContent = v === 'skip' ? '예상하지 않고 시작했어요.' : '골랐어요. 이제 직접 해 보며 확인해요.';
+      pr.classList.add('done');
+      if (veil) veil.remove();
+      slide.dispatchEvent(new CustomEvent('predicted', { detail: v }));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+    if (veil) $('.skip', veil).addEventListener('click', () => pick('skip'));
+  }
+
+  /* ---------- 도전과 도장 ----------
+     <div class="challenge"><b>도전</b><p>목표</p></div>. 조각이 목표를 이루었을 때 stamp(root)를 부른다.
+     도장은 이 기기에 남고(단원마다), 위쪽 차례 단추에 ✓가 붙는다. 시연 중에는 찍히지 않는다. */
+  const STAMP_KEY = 'stamps:' + document.title;
+  let stamps = {};
+  try { stamps = JSON.parse(window.localStorage.getItem(STAMP_KEY) || '{}') || {}; } catch (e) { stamps = {}; }
+  const stampHooks = [];
+  function paintStamp(slide) {
+    const ch = $('.challenge', slide), on = !!stamps[slide.dataset.name];
+    if (ch) {
+      ch.classList.toggle('done', on);
+      let mark = $('.stamp', ch);
+      if (on && !mark) { mark = document.createElement('span'); mark.className = 'stamp'; mark.textContent = '참 잘했어요'; ch.appendChild(mark); }
+      if (!on && mark) mark.remove();
+    }
+    stampHooks.forEach((f) => f());
+  }
+  function stamp(root) {
+    if (demoing) return;
+    const slide = root.closest('.slide') || root, n = slide.dataset.name;
+    if (stamps[n]) return;
+    stamps[n] = 1;
+    try { window.localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) { /* 이 기기에만 못 남김 */ }
+    paintStamp(slide);
+    const ch = $('.challenge', slide);
+    if (ch && !reduce) { ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); }
+    if (ch) ch.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });   // 오른쪽 칸 아래에 있어도 도장이 보이게
+  }
+  function clearStamps() {
+    stamps = {};
+    try { window.localStorage.removeItem(STAMP_KEY); } catch (e) { /* 그대로 */ }
+    $$('.slide').forEach(paintStamp);
+  }
+
+  /* ---------- 시연(보여 주기) ----------
+     demo(root, [[말, async (d) => { … }], …]). .ctrl 의 <button class="btn" data-demo> 를 누르면 차례대로 실행한다.
+     d.slide(막대, 값, 밀리초) · d.press(단추) · d.wait(밀리초). 화면 위에 «1/4 말»이 뜬다.
+     다시 누르거나, 사람이 무대를 만지거나, 장을 떠나면 멈춘다. */
+  let demoing = false;
+  const demoStops = [];
+  function demo(root, steps) {
+    const btn = $('[data-demo]', root), view = $('.view', root);
+    if (!btn) return { stop() {} };
+    const say = document.createElement('p');
+    say.className = 'demo-say'; say.hidden = true; say.setAttribute('aria-live', 'polite');
+    if (view) view.appendChild(say);
+    let run = 0;
+    const label = btn.textContent;
+    function stop() {
+      run++;
+      demoing = false;
+      btn.textContent = label; btn.setAttribute('aria-pressed', 'false');
+      say.hidden = true;
+    }
+    demoStops.push(stop);
+    btn.setAttribute('aria-pressed', 'false');
+    btn.addEventListener('click', async () => {
+      if (btn.getAttribute('aria-pressed') === 'true') { stop(); return; }
+      demoStops.forEach((f) => f());
+      const id = ++run;
+      demoing = true;
+      btn.textContent = '■ 멈추기'; btn.setAttribute('aria-pressed', 'true');
+      say.hidden = false;
+      const alive = () => { if (id !== run) throw new Error('stop'); };
+      const wait = (ms) => new Promise((ok, no) => setTimeout(() => (id === run ? ok() : no(new Error('stop'))), reduce ? Math.min(ms, 300) : ms));
+      const d = {
+        wait,
+        press(el) { alive(); if (el && !el.disabled) el.click(); },
+        async slide(el, to, ms) {
+          alive();
+          const from = +el.value, n = reduce ? 1 : Math.max(1, Math.round((ms || 1500) / 40));
+          for (let i = 1; i <= n; i++) {
+            el.value = from + (to - from) * i / n;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            if (i < n) await wait(40);
+          }
+        },
+      };
+      try {
+        for (let i = 0; i < steps.length; i++) {
+          say.textContent = (i + 1) + '/' + steps.length + '  ' + steps[i][0];
+          await steps[i][1](d);
+          await wait(1600);
+        }
+      } catch (e) { /* 멈춤 */ }
+      if (id === run) stop();
+    });
+    // 사람이 무대나 조작 칸을 직접 만지면 시연을 멈춘다(프로그램이 누르는 것은 pointerdown이 없다)
+    root.addEventListener('pointerdown', (e) => { if (btn.getAttribute('aria-pressed') === 'true' && !btn.contains(e.target)) stop(); }, true);
+    return { stop };
   }
   // 고르는 물음: 맞히면 done(true)
   function ask(box, right, done) {
@@ -746,11 +928,33 @@ window.Lesson = (function () {
     b.setAttribute('aria-label', (i + 1) + '장 ' + s.dataset.label);
     b.addEventListener('click', () => go(i, true));
     steps.appendChild(b);
+    predict(s);
   });
+  // 도장: 차례 단추의 ✓, 확인 장의 «받은 도장» 칸
+  const withChallenge = slides.filter((s) => $('.challenge', s));
+  stampHooks.push(() => {
+    slides.forEach((s, k) => $$('button', steps)[k].classList.toggle('stamped', !!stamps[s.dataset.name]));
+    const sum = $('#stampSum');
+    if (sum) {
+      const got = withChallenge.filter((s) => stamps[s.dataset.name]);
+      sum.textContent = got.length + ' / ' + withChallenge.length + (got.length ? ' · ' + got.map((s) => s.dataset.label).join(', ') : '');
+    }
+  });
+  slides.forEach(paintStamp);
+  const clr = $('#stampClear');
+  if (clr) {
+    let armed = 0;
+    clr.addEventListener('click', () => {
+      if (!armed) { clr.textContent = '한 번 더 누르면 지워요'; armed = setTimeout(() => { armed = 0; clr.textContent = '도장 지우기'; }, 3000); return; }
+      clearTimeout(armed); armed = 0; clr.textContent = '도장 지우기';
+      clearStamps();
+    });
+  }
   function go(i, push) {
     i = clamp(i, 0, slides.length - 1);
     if (i === idx) return;
     if (idx >= 0 && live[names[idx]]) live[names[idx]].setActive(false);
+    demoStops.forEach((f) => f());
     idx = i;
     slides.forEach((s, k) => { s.hidden = k !== i; });
     $$('button', steps).forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
@@ -847,7 +1051,7 @@ window.Lesson = (function () {
     })();
   }
 
-  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, start };
+  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start };
 })();
 
 /* 6학년 2학기 과학 3단원 «전기의 이용» 수업 슬라이드.
@@ -855,7 +1059,7 @@ window.Lesson = (function () {
    magnet(전자석의 성질)은 옆과 위에서 모두 봐야 해서 입체 화면으로 만든다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, start } = window.Lesson;
+  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const parts = {};
 
   /* ---------- 전기 부품 그림 ---------- */
@@ -986,6 +1190,7 @@ window.Lesson = (function () {
       const allG = Object.keys(CARDS).every((k) => guess[k]), allT = Object.keys(CARDS).every((k) => tested[k]);
       qbox.hidden = !allT;
       todo($('#cirBox1'), allT && okA && okB ? 3 : allT ? 2 : allG ? 1 : 0);
+      if (Object.keys(CARDS).every((k) => tested[k] && guess[k] === (CARDS[k].lit ? 'on' : 'off'))) stamp(root);
       todo($('#cirBox2'), ['plastic', 'rubber', 'metal'].filter((k) => rodDone[k]).length === 3 ? 3 : rodDone.rubber && rodDone.plastic ? 2 : rodDone.plastic ? 1 : 0);
       table();
     }
@@ -998,6 +1203,15 @@ window.Lesson = (function () {
     ask($('[data-q="a"]', qbox), 'whole', (ok) => { okA = okA || ok; say.textContent = ok ? '맞았어요.' : '카드 나를 다시 살펴보세요.'; upd(); });
     ask($('[data-q="b"]', qbox), 'both', (ok) => { okB = okB || ok; say.textContent = ok ? '맞았어요.' : '카드 가, 다, 라는 전지의 어느 극에 연결되어 있나요?'; upd(); });
     upd();
+    const cardBtn = (k) => $('button[data-card="' + k + '"]', root), rodBtn = (k) => $('button[data-rod="' + k + '"]', root);
+    const showCard = (k) => async (d) => { d.press($('button[data-exp="1"]', root)); d.press(cardBtn(k)); await d.wait(900); d.press(swBtn); };
+    demo(root, [
+      ['카드 가: 전선이 전지의 (+)극에만 연결되어 있어요.', showCard('ga')],
+      ['카드 나: (+)극부터 (-)극까지 끊어진 곳 없이 연결되어 불이 켜져요.', showCard('na')],
+      ['카드 다: 두 전선이 모두 (+)극에 연결되고 (-)극에는 아무것도 없어요.', showCard('da')],
+      ['카드 라: 전선이 전지의 (-)극에만 연결되어 있어요.', showCard('ra')],
+      ['스위치 대신 막대를 넣어 봐요. 금속 막대에서만 불이 켜져요.', async (d) => { d.press($('button[data-exp="2"]', root)); for (const k of ['plastic', 'rubber', 'metal']) { await d.wait(900); d.press(rodBtn(k)); } }],
+    ]);
     return { setActive: stage.setActive };
   };
 
@@ -1050,6 +1264,7 @@ window.Lesson = (function () {
       const all = done.bulb && done.motor && done.buzzer;
       qbox.hidden = !all;
       todo(root, all && okQ ? 3 : all ? 2 : done.bulb ? 1 : 0);
+      if (closed && flip && part === 'bulb') stamp(root);
       hum();
     }
     function toggle() { closed = !closed; upd(); }
@@ -1059,6 +1274,15 @@ window.Lesson = (function () {
     $$('button[data-part]', root).forEach((b) => b.addEventListener('click', () => { part = b.dataset.part; closed = false; upd(); }));
     ask($('.opts', qbox), 'lt', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 전지 두 개를 직렬연결한 쪽이 더 밝아요.' : '두 전구의 밝기를 다시 견주어 보세요.'; upd(); });
     upd();
+    const partBtn = (k) => $('button[data-part="' + k + '"]', root);
+    const show = (k) => async (d) => { d.press(partBtn(k)); await d.wait(500); d.press(swBtn); };
+    demo(root, [
+      ['전구를 연결하고 스위치를 닫아요. 전지 두 개를 직렬연결한 쪽이 더 밝아요.', show('bulb')],
+      ['전동기로 바꾸면 전지 두 개 쪽이 더 빠르게 돌아요.', show('motor')],
+      ['버저로 바꾸면 전지 두 개 쪽의 소리가 더 커요.', show('buzzer')],
+      ['전지 하나의 방향을 바꾸면 같은 극끼리 마주 보아 전기가 흐르지 않아요.', async (d) => { await show('bulb')(d); await d.wait(900); if (!flip) d.press(flipBtn); }],
+      ['전지의 방향을 되돌려요.', async (d) => { if (flip) d.press(flipBtn); await d.wait(300); }],
+    ]);
     return { setActive(on) { stage.setActive(on); if (!on && closed) { closed = false; upd(); } } };
   };
 
@@ -1161,6 +1385,7 @@ window.Lesson = (function () {
       $('#magRings').textContent = closed && power ? HOLD[cells] : 0;
       $('#magPoles').textContent = closed ? (flip ? '왼쪽 N극 · 오른쪽 S극' : '왼쪽 S극 · 오른쪽 N극') : '나타나지 않아요';
       todo(root, seen.one && seen.two && seen.dirA && seen.dirB ? 3 : seen.one && seen.two ? 2 : seen.one ? 1 : 0);
+      if (closed && power && cells === 2) stamp(root);
       build();
     }
     swBtn.addEventListener('click', () => { closed = !closed; upd(); });
@@ -1168,6 +1393,14 @@ window.Lesson = (function () {
     $$('button[data-mode]', root).forEach((b) => b.addEventListener('click', () => { mode = b.dataset.mode; closed = false; upd(); }));
     $$('button[data-cells]', root).forEach((b) => b.addEventListener('click', () => { cells = +b.dataset.cells; upd(); }));
     upd();
+    const modeBtn = (k) => $('button[data-mode="' + k + '"]', root), cellBtn = (k) => $('button[data-cells="' + k + '"]', root);
+    demo(root, [
+      ['전지 한 개를 연결하고 스위치를 닫아요. 둥근 철 고리가 붙어요.', async (d) => { d.press(modeBtn('power')); d.press(cellBtn(1)); await d.wait(500); d.press(swBtn); }],
+      ['스위치를 열면 고리가 떨어져요. 전기가 흐를 때만 자석이 돼요.', async (d) => { await d.wait(600); d.press(swBtn); }],
+      ['전지 두 개를 직렬연결하면 고리가 더 많이 붙어요.', async (d) => { d.press(cellBtn(2)); await d.wait(500); d.press(swBtn); }],
+      ['위에서 보면: 스위치를 닫으면 나침반 바늘이 움직여요.', async (d) => { d.press(modeBtn('pole')); await d.wait(700); d.press(swBtn); }],
+      ['전지의 방향을 바꾸면 바늘이 반대로 돌아요. 전자석의 극이 바뀌었어요.', async (d) => { await d.wait(800); d.press(flipBtn); }],
+    ]);
     return { setActive(on) { if (view) view.setActive(on); } };
   };
 
@@ -1180,8 +1413,8 @@ window.Lesson = (function () {
       { n: '깡통', iron: true, x: 305, w: 38, h: 46 }, { n: '나무토막', iron: false, x: 395, w: 58, h: 30 },
       { n: '볼트', iron: true, x: 485, w: 46, h: 18 },
     ];
-    let items = [], on = false, held = null, okQ = false, picked = false, note = '';
-    function reset() { items = START.map((s) => Object.assign({ y: GROUND - s.h, vy: 0, inBin: false }, s)); on = false; held = null; note = ''; slider.value = 120; upd(); }
+    let items = [], on = false, held = null, okQ = false, picked = false, note = '', presses = 0;
+    function reset() { items = START.map((s) => Object.assign({ y: GROUND - s.h, vy: 0, inBin: false }, s)); on = false; held = null; note = ''; presses = 0; slider.value = 120; upd(); }
     const delivered = () => items.filter((i) => i.inBin).length;
 
     function shape(g, it) {
@@ -1224,9 +1457,11 @@ window.Lesson = (function () {
       $('#craN').textContent = n;
       qbox.hidden = n < 3;
       todo(root, n >= 3 && okQ ? 3 : n >= 3 ? 2 : picked ? 1 : 0);
+      $('#craPress').textContent = presses;
+      if (n >= 3 && presses <= 8) stamp(root);
     }
     swBtn.addEventListener('click', () => {
-      on = !on;
+      on = !on; presses++;
       const mx = +slider.value;
       if (on) {
         const near = items.filter((i) => !i.inBin && Math.abs(i.x - mx) < 44).sort((a, b) => Math.abs(a.x - mx) - Math.abs(b.x - mx))[0];
@@ -1241,6 +1476,12 @@ window.Lesson = (function () {
     $('#craReset').addEventListener('click', reset);
     ask($('.opts', qbox), 'stick', (ok) => { okQ = okQ || ok; say.textContent = ok ? '맞았어요. 전자석은 스위치를 열면 물체가 떨어져요.' : '영구 자석은 항상 자석의 성질이 나타나요.'; upd(); });
     reset();
+    demo(root, [
+      ['기중기를 못 위로 옮기고 스위치를 닫아요. 못이 전자석에 붙어요.', async (d) => { d.press($('#craReset')); await d.slide(slider, 130, 1200); d.press(swBtn); }],
+      ['상자 위로 옮긴 뒤 스위치를 열면 못이 떨어져요.', async (d) => { await d.slide(slider, 670, 1800); d.press(swBtn); }],
+      ['플라스틱병은 철이 아니어서 붙지 않아요.', async (d) => { await d.slide(slider, 215, 1500); d.press(swBtn); await d.wait(1200); d.press(swBtn); }],
+      ['깡통과 볼트도 같은 방법으로 옮겨요.', async (d) => { for (const [a, b] of [[305, 660], [485, 690]]) { await d.slide(slider, a, 1300); d.press(swBtn); await d.slide(slider, b, 1500); d.press(swBtn); } }],
+    ]);
     return { setActive: stage.setActive };
   };
 
@@ -1277,6 +1518,7 @@ window.Lesson = (function () {
         $('.q', li).appendChild(tag);
         $('#habEff').textContent = found.eff.join(' ') || '아직 찾지 못했어요.';
         $('#habSafe').textContent = found.safe.join(' ') || '아직 찾지 못했어요.';
+        if (found.eff.length + found.safe.length === DATA.length) stamp(root);
         $('#habScore').textContent = found.eff.length + found.safe.length < DATA.length ? (found.eff.length + found.safe.length) + ' / ' + DATA.length + ' 찾았어요.' : '모두 찾았어요. 우리 모둠의 전기 사용 생활 규칙을 정해 봐요.';
       }));
     });

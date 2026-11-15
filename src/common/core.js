@@ -198,7 +198,137 @@ window.Lesson = (function () {
     const items = $$('.todo li', root);
     items.forEach((li, i) => li.classList.toggle('done', i < n));
     const learn = $('.learn', root);
-    if (learn) learn.classList.toggle('open', n >= items.length);
+    if (!learn) return;
+    const slide = root.closest('.slide') || root, pr = $('.predict', slide);
+    const picked = !pr || !!pr.dataset.picked;
+    learn.classList.toggle('open', n >= items.length && picked);
+    if (pr && picked) {
+      let mine = $('.mine', learn);
+      if (!mine) { mine = document.createElement('span'); mine.className = 'mine'; learn.appendChild(mine); }
+      const v = pr.dataset.picked, btn = $('.opt[data-v="' + v + '"]', pr);
+      mine.textContent = v === 'skip' ? '예상을 고르지 않고 해 봤어요.'
+        : '내 예상 «' + (btn ? btn.textContent : '') + '» → ' + (v === pr.dataset.answer ? '예상과 같았어요.' : '예상과 달랐어요. 무엇이 달랐는지 이야기해 봐요.');
+    }
+  }
+
+  /* ---------- 예상하기 ----------
+     체험 장의 .side 맨 위 <div class="predict" data-answer="정답 data-v">. 고르기 전에는 무대(.stage)를 가림막이 덮는다.
+     고른 뒤에는 바꿀 수 없다(먼저 생각하고 확인하는 차례를 지키려고). «예상 없이 해 보기»로 건너뛸 수 있다. */
+  function predict(slide) {
+    const pr = $('.predict', slide), stage = $('.stage', slide);
+    if (!pr) return;
+    const btns = $$('.opt', pr), note = $('.pr', pr);
+    let veil = null;
+    if (stage) {
+      veil = document.createElement('div');
+      veil.className = 'veil';
+      veil.innerHTML = '<p>먼저 예상해 보세요</p><span>«예상해 보기»에서 하나를 골라요</span><button type="button" class="skip">예상 없이 해 보기</button>';
+      stage.appendChild(veil);
+      // 좁은 화면에서는 예상하기가 아래에 있으니 가림막을 누르면 그리로 데려간다
+      veil.addEventListener('click', (e) => { if (!e.target.closest('.skip')) pr.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); });
+    }
+    const pick = (v) => {
+      pr.dataset.picked = v;
+      btns.forEach((b) => { b.setAttribute('aria-pressed', String(b.dataset.v === v)); b.disabled = true; });
+      if (note) note.textContent = v === 'skip' ? '예상하지 않고 시작했어요.' : '골랐어요. 이제 직접 해 보며 확인해요.';
+      pr.classList.add('done');
+      if (veil) veil.remove();
+      slide.dispatchEvent(new CustomEvent('predicted', { detail: v }));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+    if (veil) $('.skip', veil).addEventListener('click', () => pick('skip'));
+  }
+
+  /* ---------- 도전과 도장 ----------
+     <div class="challenge"><b>도전</b><p>목표</p></div>. 조각이 목표를 이루었을 때 stamp(root)를 부른다.
+     도장은 이 기기에 남고(단원마다), 위쪽 차례 단추에 ✓가 붙는다. 시연 중에는 찍히지 않는다. */
+  const STAMP_KEY = 'stamps:' + document.title;
+  let stamps = {};
+  try { stamps = JSON.parse(window.localStorage.getItem(STAMP_KEY) || '{}') || {}; } catch (e) { stamps = {}; }
+  const stampHooks = [];
+  function paintStamp(slide) {
+    const ch = $('.challenge', slide), on = !!stamps[slide.dataset.name];
+    if (ch) {
+      ch.classList.toggle('done', on);
+      let mark = $('.stamp', ch);
+      if (on && !mark) { mark = document.createElement('span'); mark.className = 'stamp'; mark.textContent = '참 잘했어요'; ch.appendChild(mark); }
+      if (!on && mark) mark.remove();
+    }
+    stampHooks.forEach((f) => f());
+  }
+  function stamp(root) {
+    if (demoing) return;
+    const slide = root.closest('.slide') || root, n = slide.dataset.name;
+    if (stamps[n]) return;
+    stamps[n] = 1;
+    try { window.localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) { /* 이 기기에만 못 남김 */ }
+    paintStamp(slide);
+    const ch = $('.challenge', slide);
+    if (ch && !reduce) { ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); }
+    if (ch) ch.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });   // 오른쪽 칸 아래에 있어도 도장이 보이게
+  }
+  function clearStamps() {
+    stamps = {};
+    try { window.localStorage.removeItem(STAMP_KEY); } catch (e) { /* 그대로 */ }
+    $$('.slide').forEach(paintStamp);
+  }
+
+  /* ---------- 시연(보여 주기) ----------
+     demo(root, [[말, async (d) => { … }], …]). .ctrl 의 <button class="btn" data-demo> 를 누르면 차례대로 실행한다.
+     d.slide(막대, 값, 밀리초) · d.press(단추) · d.wait(밀리초). 화면 위에 «1/4 말»이 뜬다.
+     다시 누르거나, 사람이 무대를 만지거나, 장을 떠나면 멈춘다. */
+  let demoing = false;
+  const demoStops = [];
+  function demo(root, steps) {
+    const btn = $('[data-demo]', root), view = $('.view', root);
+    if (!btn) return { stop() {} };
+    const say = document.createElement('p');
+    say.className = 'demo-say'; say.hidden = true; say.setAttribute('aria-live', 'polite');
+    if (view) view.appendChild(say);
+    let run = 0;
+    const label = btn.textContent;
+    function stop() {
+      run++;
+      demoing = false;
+      btn.textContent = label; btn.setAttribute('aria-pressed', 'false');
+      say.hidden = true;
+    }
+    demoStops.push(stop);
+    btn.setAttribute('aria-pressed', 'false');
+    btn.addEventListener('click', async () => {
+      if (btn.getAttribute('aria-pressed') === 'true') { stop(); return; }
+      demoStops.forEach((f) => f());
+      const id = ++run;
+      demoing = true;
+      btn.textContent = '■ 멈추기'; btn.setAttribute('aria-pressed', 'true');
+      say.hidden = false;
+      const alive = () => { if (id !== run) throw new Error('stop'); };
+      const wait = (ms) => new Promise((ok, no) => setTimeout(() => (id === run ? ok() : no(new Error('stop'))), reduce ? Math.min(ms, 300) : ms));
+      const d = {
+        wait,
+        press(el) { alive(); if (el && !el.disabled) el.click(); },
+        async slide(el, to, ms) {
+          alive();
+          const from = +el.value, n = reduce ? 1 : Math.max(1, Math.round((ms || 1500) / 40));
+          for (let i = 1; i <= n; i++) {
+            el.value = from + (to - from) * i / n;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            if (i < n) await wait(40);
+          }
+        },
+      };
+      try {
+        for (let i = 0; i < steps.length; i++) {
+          say.textContent = (i + 1) + '/' + steps.length + '  ' + steps[i][0];
+          await steps[i][1](d);
+          await wait(1600);
+        }
+      } catch (e) { /* 멈춤 */ }
+      if (id === run) stop();
+    });
+    // 사람이 무대나 조작 칸을 직접 만지면 시연을 멈춘다(프로그램이 누르는 것은 pointerdown이 없다)
+    root.addEventListener('pointerdown', (e) => { if (btn.getAttribute('aria-pressed') === 'true' && !btn.contains(e.target)) stop(); }, true);
+    return { stop };
   }
   // 고르는 물음: 맞히면 done(true)
   function ask(box, right, done) {
@@ -243,11 +373,33 @@ window.Lesson = (function () {
     b.setAttribute('aria-label', (i + 1) + '장 ' + s.dataset.label);
     b.addEventListener('click', () => go(i, true));
     steps.appendChild(b);
+    predict(s);
   });
+  // 도장: 차례 단추의 ✓, 확인 장의 «받은 도장» 칸
+  const withChallenge = slides.filter((s) => $('.challenge', s));
+  stampHooks.push(() => {
+    slides.forEach((s, k) => $$('button', steps)[k].classList.toggle('stamped', !!stamps[s.dataset.name]));
+    const sum = $('#stampSum');
+    if (sum) {
+      const got = withChallenge.filter((s) => stamps[s.dataset.name]);
+      sum.textContent = got.length + ' / ' + withChallenge.length + (got.length ? ' · ' + got.map((s) => s.dataset.label).join(', ') : '');
+    }
+  });
+  slides.forEach(paintStamp);
+  const clr = $('#stampClear');
+  if (clr) {
+    let armed = 0;
+    clr.addEventListener('click', () => {
+      if (!armed) { clr.textContent = '한 번 더 누르면 지워요'; armed = setTimeout(() => { armed = 0; clr.textContent = '도장 지우기'; }, 3000); return; }
+      clearTimeout(armed); armed = 0; clr.textContent = '도장 지우기';
+      clearStamps();
+    });
+  }
   function go(i, push) {
     i = clamp(i, 0, slides.length - 1);
     if (i === idx) return;
     if (idx >= 0 && live[names[idx]]) live[names[idx]].setActive(false);
+    demoStops.forEach((f) => f());
     idx = i;
     slides.forEach((s, k) => { s.hidden = k !== i; });
     $$('button', steps).forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
@@ -344,5 +496,5 @@ window.Lesson = (function () {
     })();
   }
 
-  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, start };
+  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start };
 })();

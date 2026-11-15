@@ -74,6 +74,7 @@
       <button class="btn" type="button" data-exp="2" aria-pressed="false">실험 2 전기가 흐르는 물질</button>
       <button class="btn go" type="button" id="cirSw">스위치 닫기</button>
       <output id="cirOut" aria-live="polite"></output>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
@@ -112,6 +113,7 @@
       </ol>
       <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">금속과 같이 전기가 잘 흐르는 물질을 도체, 플라스틱·고무·종이·유리와 같이 전기가 잘 흐르지 않는 물질을 부도체라고 해요.</span></div>
     </div>
+    <div class="challenge"><b>도전</b><p>네 카드의 예상을 모두 맞혀 보세요.</p></div>
     <p class="fine">전구(1.5 V), 전지(1.5 V) 한 개를 연결한 전기 회로</p>
   </div>
 </section>
@@ -135,9 +137,15 @@
       <button class="btn go" type="button" id="serSw">스위치 닫기</button>
       <button class="btn" type="button" id="serFlip" aria-pressed="false">전지 방향 바꾸기</button>
       <label class="chk"><input type="checkbox" id="serSound"> 버저 소리 듣기</label>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="a">
+      <p class="pq">전지 두 개를 직렬연결하면 전구의 밝기는 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">더 밝아요</button><button class="opt" type="button" data-v="b" aria-pressed="false">같아요</button><button class="opt" type="button" data-v="c" aria-pressed="false">더 어두워요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>전기 부품</th><th>전지 한 개</th><th>전지 두 개 직렬연결</th></tr></thead>
@@ -155,6 +163,7 @@
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전지 두 개를 연결할 때 한 전지의 (+)극을 다른 전지의 (-)극에 연결하는 방법을 전지의 직렬연결이라고 해요. 전지 한 개를 연결한 전기 회로의 전구보다 전지 두 개를 직렬연결한 전기 회로의 전구가 더 밝아요.</span></div>
+    <div class="challenge"><b>도전</b><p>전지가 두 개인데도 전구에 불이 켜지지 않게 만들어 보세요.</p></div>
     <p class="fine">전구·전동기·버저는 3.0 V용, 전지는 1.5 V</p>
   </div>
 </section>
@@ -182,9 +191,15 @@
         <button class="btn" type="button" data-cells="2" aria-pressed="false">전지 두 개 직렬연결</button>
       </span>
       <button class="btn" type="button" id="magFlip" aria-pressed="false" hidden>전지 방향 바꾸기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">스위치를 열어 전기가 흐르지 않으면 전자석에 붙은 철 고리는 어떻게 될까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">그대로 붙어 있어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">떨어져요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>전기가</span><b id="magOn" class="sm">흐르지 않아요</b></div>
       <div class="read" style="--c: var(--shade)" id="magRingBox"><span>붙은 둥근 철 고리</span><b id="magRings">0</b><small>개</small></div>
@@ -206,6 +221,7 @@
         </tbody>
       </table>
     </div>
+    <div class="challenge"><b>도전</b><p>전자석에 둥근 철 고리를 7개 붙여 보세요.</p></div>
     <p class="fine">붙는 고리의 개수는 이해를 돕기 위한 예 · 나침반의 빨간 쪽이 N극</p>
   </div>
 </section>
@@ -225,12 +241,19 @@
       <input type="range" id="craX" min="60" max="740" step="2" value="120">
       <button class="btn go" type="button" id="craSw">스위치 닫기</button>
       <button class="btn" type="button" id="craReset">다시 하기</button>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <div class="predict" data-answer="b">
+      <p class="pq">전자석 기중기로 플라스틱병을 옮길 수 있을까요?</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">옮길 수 있어요</button><button class="opt" type="button" data-v="b" aria-pressed="false">옮길 수 없어요</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>전자석</span><b id="craOn" class="sm">꺼짐</b></div>
       <div class="read" style="--c: var(--ok)"><span>상자에 옮긴 철 물체</span><b id="craN">0</b><small>/ 3개</small></div>
+      <div class="read" style="--c: var(--hot)"><span>스위치 누른 횟수</span><b id="craPress">0</b><small>번</small></div>
     </div>
     <ol class="todo">
       <li>기중기를 물체 위로 옮기고 스위치를 닫아요.</li>
@@ -243,6 +266,7 @@
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">전자석 기중기는 전기가 흐를 때만 자석이 되는 성질을 이용해 철로 만든 무거운 물체를 붙였다 뗄 수 있어요.</span></div>
+    <div class="challenge"><b>도전</b><p>스위치를 8번 이하로 눌러 철로 만든 물체 3개를 모두 상자에 옮겨 보세요.</p></div>
     <div class="card" style="--c: var(--cold)"><b>전자석을 사용하는 다른 예</b><p>선풍기: 전자석을 이용한 전동기가 회전하며 바람을 일으켜요. 스피커: 영구 자석과 전자석이 밀고 당기는 힘으로 막이 떨리며 소리가 나요. 전기 자동차: 전자석을 이용해 바퀴가 회전해요.</p></div>
   </div>
 </section>
@@ -256,6 +280,7 @@
   <div><ul class="ox habits" id="habits"></ul></div>
   <div class="sum">
     <p class="score" id="habScore" aria-live="polite">상황마다 알맞은 행동을 골라 보세요.</p>
+    <div class="challenge"><b>도전</b><p>여덟 가지 상황에서 알맞은 행동을 모두 찾아보세요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>효율적으로 사용해요</b><p id="habEff">아직 찾지 못했어요.</p></div>
     <div class="card" style="--c: var(--hot)"><b>안전하게 사용해요</b><p id="habSafe">아직 찾지 못했어요.</p></div>
   </div>
@@ -278,6 +303,7 @@
   </div>
   <div class="sum">
     <p class="score" aria-live="polite">다섯 문제를 풀어 보세요.</p>
+    <div class="card stampcard" style="--c: var(--hot)"><b>받은 도장</b><p id="stampSum"></p><button class="btn" type="button" id="stampClear">도장 지우기</button></div>
     <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>손전등의 스위치</b><p>스위치를 닫으면 전기 회로가 연결되어 전기가 흐르고, 전구에 불이 켜져요.</p></div>
     <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>새로 산 마우스의 전지 칸에 비닐이 끼워져 있는 까닭은 무엇일까요?</p></div>

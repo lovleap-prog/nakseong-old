@@ -51,9 +51,16 @@
       <label for="flatX">TODO 바꿀 것</label>
       <input type="range" id="flatX" min="0" max="100" step="1" value="20">
       <output id="flatOut" for="flatX"></output>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <!-- 예상해 보기: 조작하기 전에 결과를 고른다. 고르기 전에는 무대가 가려진다. data-answer = 실험으로 확인되는 보기의 data-v -->
+    <div class="predict" data-answer="b">
+      <p class="pq">TODO 이 장의 실험 결과를 묻는 물음(무엇이 어떻게 될까요?)</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">TODO 흔한 생각</button><button class="opt" type="button" data-v="b" aria-pressed="false">TODO 실험이 보여 주는 결과</button><button class="opt" type="button" data-v="c" aria-pressed="false">TODO 또 다른 생각</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>TODO 값 이름</span><b id="flatVal">0</b><small>cm</small></div>
     </div>
@@ -68,6 +75,8 @@
       <p class="say" aria-live="polite"></p>
     </div>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">TODO 교과서의 정리 문장을 해요체로</span></div>
+    <!-- 도전: 해 볼 일보다 한 걸음 더 나간 목표 하나. 이루면 app.js 에서 stamp(root) -->
+    <div class="challenge"><b>도전</b><p>TODO 숫자나 상태로 판정할 수 있는 목표</p></div>
     <p class="fine">TODO 값의 출처와 단순화한 점(예: 길이는 이해를 돕기 위한 예)</p>
   </div>
 </section>
@@ -89,9 +98,16 @@
       <label for="spaceA">TODO 바꿀 것</label>
       <input type="range" id="spaceA" min="0" max="90" step="1" value="30">
       <output id="spaceOut" for="spaceA"></output>
+      <button class="btn" type="button" data-demo>▶ 보여 주기</button>
     </div>
   </div>
   <div class="side">
+    <!-- 예상해 보기: 조작하기 전에 결과를 고른다. 고르기 전에는 무대가 가려진다. data-answer = 실험으로 확인되는 보기의 data-v -->
+    <div class="predict" data-answer="b">
+      <p class="pq">TODO 이 장의 실험 결과를 묻는 물음(무엇이 어떻게 될까요?)</p>
+      <div class="opts row"><button class="opt" type="button" data-v="a" aria-pressed="false">TODO 흔한 생각</button><button class="opt" type="button" data-v="b" aria-pressed="false">TODO 실험이 보여 주는 결과</button><button class="opt" type="button" data-v="c" aria-pressed="false">TODO 또 다른 생각</button></div>
+      <p class="pr" aria-live="polite"></p>
+    </div>
     <div class="reads">
       <div class="read" style="--c: var(--sun)"><span>TODO 값 이름</span><b id="spaceVal">0</b><small>°</small></div>
     </div>
@@ -100,6 +116,8 @@
       <li>TODO</li>
     </ol>
     <div class="learn"><b>알게 된 것</b><span class="lock">해 볼 일을 마치면 열려요.</span><span class="body">TODO</span></div>
+    <!-- 도전: 해 볼 일보다 한 걸음 더 나간 목표 하나. 이루면 app.js 에서 stamp(root) -->
+    <div class="challenge"><b>도전</b><p>TODO 숫자나 상태로 판정할 수 있는 목표</p></div>
     <p class="fine">TODO</p>
   </div>
 </section>
@@ -121,6 +139,7 @@
   </div>
   <div class="sum">
     <p class="score" aria-live="polite">문제를 풀어 보세요.</p>
+    <div class="card stampcard" style="--c: var(--hot)"><b>받은 도장</b><p id="stampSum"></p><button class="btn" type="button" id="stampClear">도장 지우기</button></div>
     <div class="card" style="--c: var(--sun)"><b>처음 내 생각</b><p id="predBack">표지에서 아직 고르지 않았어요.</p></div>
     <div class="card" style="--c: var(--ok)"><b>TODO 단원의 핵심</b><p>TODO 교과서 «한눈에 정리»의 핵심 문장</p></div>
     <div class="card" style="--c: var(--cold)"><b>생각 넓히기</b><p>TODO 교과서 «생각이 쑥쑥» 물음 하나</p></div>

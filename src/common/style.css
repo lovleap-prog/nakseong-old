@@ -36,6 +36,32 @@ button { cursor: pointer; }
 .nav button { min-height: 46px; padding: 0 22px; border: 2px solid var(--ink); border-radius: 999px; background: var(--ink); color: var(--paper); font-weight: 700; }
 .nav button:disabled { background: var(--paper); color: var(--line); border-color: var(--line); cursor: default; }
 .nav span { font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.nav .tools { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.nav .tool { min-height: 40px; padding: 0 14px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 15px; }
+.nav .tool[aria-pressed="true"] { background: var(--sun-soft); }
+body.still *, body.still *::before, body.still *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+
+/* 핵심 낱말 */
+.head { display: flex; flex-wrap: wrap; align-items: center; column-gap: 16px; row-gap: 4px; }
+.head > .kind, .head > .memo { flex-basis: 100%; }
+.words { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.words::before { content: "낱말"; font-size: 13px; font-weight: 700; color: var(--cold); letter-spacing: .04em; }
+.word { min-height: 34px; padding: 0 12px; border: 2px solid var(--cold); border-radius: 999px; background: var(--paper); color: var(--ink); font-weight: 700; font-size: 15px; }
+.word[aria-expanded="true"] { background: var(--cold); color: var(--paper); }
+.worddef { position: absolute; top: calc(100% + 6px); z-index: 8; width: max-content; max-width: min(440px, 86vw); margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--ink); color: var(--paper); font-size: 16px; line-height: 1.45; box-shadow: 0 6px 18px rgba(20, 39, 61, .25); }
+.gloss { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgba(20, 39, 61, .45); }
+.gloss .gin { width: min(760px, 100%); max-height: 100%; overflow: auto; background: var(--paper); border: 2px solid var(--ink); border-radius: 16px; padding: 16px 20px; }
+.gloss .ghead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.gloss dl { margin: 0; display: grid; }
+.gloss .gitem { padding: 10px 0; border-top: 1px solid var(--line); }
+.gloss dt { font: 400 21px/1.3 var(--f-display); }
+.gloss dd { margin: 2px 0 0; }
+.gloss .at { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.gloss .at button { min-height: 34px; padding: 0 12px; border: 2px solid var(--line); border-radius: 999px; background: var(--paper); font-weight: 700; font-size: 14px; color: var(--ink-2); }
+.gloss .at button:hover { border-color: var(--ink); color: var(--ink); }
+
+/* 이어 보기 */
+.resume { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 20; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; padding: 10px 14px; border: 2px solid var(--ink); border-radius: 14px; background: var(--paper); box-shadow: 0 8px 24px rgba(20, 39, 61, .2); font-weight: 700; }
 
 .kind { margin: 0; font-weight: 700; font-size: 15px; color: var(--sun); letter-spacing: .04em; }
 h1, h2 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.2; }
@@ -185,6 +211,13 @@ td.wait { color: var(--line); }
   .slide.lab { height: 100%; }
   .lab .side { overflow-y: auto; min-height: 0; padding-right: 4px; }
 }
+@media (max-width: 560px) {
+  .nav { gap: 6px; }
+  .nav button { padding: 0 12px; white-space: nowrap; }
+  .nav .tools { flex-wrap: nowrap; gap: 4px; }
+  .nav .tool { min-height: 38px; padding: 0 8px; font-size: 13px; }
+  .nav #pos { display: none; }
+}
 @media (max-width: 900px) {
   .steps { order: 3; flex-basis: 100%; flex-wrap: nowrap; }
   .cover, .lab, .check { grid-template-columns: minmax(0, 1fr); }
@@ -199,3 +232,5 @@ td.wait { color: var(--line); }
 /* 평면(2D) 무대 */
 .view.flat { background: var(--paper); }
 .view canvas.flat2d { cursor: default; touch-action: auto; }
+
+.ctrl .chk { flex: 0 1 auto; }

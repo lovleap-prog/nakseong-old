@@ -3,7 +3,8 @@
    조각은 그 장을 처음 볼 때 한 번 만들어지고, 장이 보일 때만 setActive(true) 가 된다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
+  const L = window.Lesson;   // L.reduce 는 «움직임 멈추기»에 따라 바뀌므로 꺼내 두지 않고 매번 읽는다
+  const { T, $, $$, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const parts = {};
 
   /* ---------- 평면(2D) 체험의 본보기 ----------
@@ -59,7 +60,7 @@
       box = new T.Mesh(new T.BoxGeometry(1.4, 2.4, 1.4), new T.MeshLambertMaterial({ color: tok('sun') }));
       box.position.y = 1.2; S.add(box);
       tag = label('0°', { bg: '#ffffff', color: tok('hot'), size: 0.6 }); tag.position.set(0, 3.1, 0); S.add(tag);
-      // 계속 움직이는 것이 있으면 view.onFrame((dt) => { … }) 에 쓴다. prefers-reduced-motion(reduce)이면 멈춘다.
+      // 계속 움직이는 것이 있으면 view.onFrame((dt) => { … }) 에 쓴다. prefers-reduced-motion(L.reduce)이면 멈춘다.
     }
     function upd() {
       const a = +slider.value;

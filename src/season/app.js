@@ -3,7 +3,8 @@
    입체 화면은 Three.js(전역 THREE), 그래프는 2D 캔버스. 좌표는 +x 동쪽, +y 위, +z 남쪽. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
+  const L = window.Lesson;   // L.reduce 는 «움직임 멈추기»에 따라 바뀌므로 꺼내 두지 않고 매번 읽는다
+  const { T, $, $$, tok, DEG, clamp, makeView, label, glowSprite, line, V3, ring, plot, series, gridY, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const LAT = 37.6 * DEG;      // 서울
   const NOON = 12.5;           // 우리나라에서 태양이 남중하는 시각(오후 12시 30분 무렵)
   const TILT = 23.5;
@@ -364,7 +365,7 @@
     slider.addEventListener('input', () => { if (anim) stop(); else upd(); });
     if (sky) sky.onFrame((dt) => {
       if (!anim) return;
-      anim.t += dt / (reduce ? 2.5 : 5);
+      anim.t += dt / (L.reduce ? 2.5 : 5);
       const h = anim.from + (anim.to - anim.from) * Math.min(1, anim.t);
       sky.set(h, anim.dec);
       clk.textContent = clock(Math.round(h * 6) * 10);
@@ -526,9 +527,9 @@
       const al = label('자전축', { color: '#ffffff', size: 0.5 }); al.position.set(0, ER * 1.5 + 0.35, 0); tiltG.add(al);
       sunRay = line([V3(0, 0, 0), V3(1, 0, 0)], '#ffd24a', 0.6); S.add(sunRay);
       view.onFrame((dt) => {
-        if (!reduce) globe.rotation.y += dt * 0.9;
+        if (!L.reduce) globe.rotation.y += dt * 0.9;
         if (!anim) return;
-        anim.t += dt / (reduce ? 4 : 9);
+        anim.t += dt / (L.reduce ? 4 : 9);
         slider.value = Math.round(360 * Math.min(1, anim.t));
         upd();
         if (anim.t >= 1) { anim = null; playBtn.textContent = '공전시키기'; }

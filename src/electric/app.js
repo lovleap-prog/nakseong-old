@@ -3,7 +3,8 @@
    magnet(전자석의 성질)은 옆과 위에서 모두 봐야 해서 입체 화면으로 만든다. */
 (function () {
   'use strict';
-  const { T, $, $$, reduce, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, stamp, demo, start } = window.Lesson;
+  const L = window.Lesson;   // L.reduce 는 «움직임 멈추기»에 따라 바뀌므로 꺼내 두지 않고 매번 읽는다
+  const { T, $, $$, tok, DEG, clamp, makeView, label, line, V3, flat, rr, text, josa, todo, ask, ox, stamp, demo, start } = window.Lesson;
   const parts = {};
 
   /* ---------- 전기 부품 그림 ---------- */
@@ -51,7 +52,7 @@
     if (!live) return;
     g.fillStyle = '#ffd24a'; g.strokeStyle = C.ink; g.lineWidth = 1.5;
     for (let i = 0; i < 5; i++) {
-      const p = bez(w, ((reduce ? 0 : t * 0.5) + i / 5) % 1);
+      const p = bez(w, ((L.reduce ? 0 : t * 0.5) + i / 5) % 1);
       g.beginPath(); g.arc(p[0], p[1], 5, 0, Math.PI * 2); g.fill(); g.stroke();
     }
   }
@@ -76,7 +77,7 @@
     const n = level > 0.7 ? 4 : 2;
     g.strokeStyle = C.hot; g.lineWidth = 4;
     for (let i = 0; i < n; i++) {
-      const r = 40 + i * 14 + (reduce ? 0 : (t * 30) % 14);
+      const r = 40 + i * 14 + (L.reduce ? 0 : (t * 30) % 14);
       g.globalAlpha = 1 - i / (n + 1);
       g.beginPath(); g.arc(x, y - 16, r, -0.9, -0.25); g.stroke();
       g.beginPath(); g.arc(x, y - 16, r, Math.PI + 0.25, Math.PI + 0.9); g.stroke();
@@ -188,7 +189,7 @@
       g.restore();
       g.save(); g.translate(cx + 106, 250); g.scale(0.72, 0.72); sw(g, 0, 0, closed); g.restore();
       if (part === 'bulb') bulb(g, cx, 370, level);
-      else if (part === 'motor') { if (which === 1) ang1 += dt * level * 16; else ang2 += dt * level * 16; motor(g, cx, 370, reduce ? 0 : (which === 1 ? ang1 : ang2)); }
+      else if (part === 'motor') { if (which === 1) ang1 += dt * level * 16; else ang2 += dt * level * 16; motor(g, cx, 370, L.reduce ? 0 : (which === 1 ? ang1 : ang2)); }
       else buzzer(g, cx, 370, level, t);
       text(g, cells === 1 ? '전지 한 개' : '전지 두 개 직렬연결', cx, 462, 19);
       if (cells === 2 && flip) text(g, '같은 극끼리 마주 보면 전기가 흐르지 않아요', cx, 30, 15, C.hot);
@@ -279,7 +280,7 @@
       plusL = label('(+)', { color: tok('ink'), size: 0.42 }); minusL = label('(-)', { color: tok('ink'), size: 0.42 }); S.add(plusL, minusL);
       wireA = line([V3(0, 0, 0), V3(1, 0, 0)], tok('hot'), 1); wireB = line([V3(0, 0, 0), V3(1, 0, 0)], tok('ink'), 1); S.add(wireA, wireB);
       view.onFrame((dt) => {
-        const k = reduce ? 1 : Math.min(1, dt * 6), hold = closed && mode === 'power' ? HOLD[cells] : 0;
+        const k = L.reduce ? 1 : Math.min(1, dt * 6), hold = closed && mode === 'power' ? HOLD[cells] : 0;
         rings.forEach((r, i) => {
           const to = i < hold ? r.userData.hang : r.userData.home;
           r.position.lerp(to, k);
@@ -390,7 +391,7 @@
       g.lineWidth = 4; g.beginPath(); g.moveTo(mx, 66); g.lineTo(mx, MAG_Y - 26); g.stroke();
       g.fillStyle = on ? C.hot : '#9aa4ae'; rr(g, mx - 46, MAG_Y - 26, 92, 40, 10); g.fill(); g.stroke();
       text(g, on ? '전자석 켜짐' : '전자석 꺼짐', mx, MAG_Y - 46, 15, on ? C.hot : C.ink2);
-      if (on && !reduce) { g.strokeStyle = C.hot; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.globalAlpha = 0.5 - i * 0.14; g.beginPath(); g.arc(mx, MAG_Y + 14, 22 + i * 12 + (t * 20) % 12, 0.25, Math.PI - 0.25); g.stroke(); } g.globalAlpha = 1; }
+      if (on && !L.reduce) { g.strokeStyle = C.hot; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.globalAlpha = 0.5 - i * 0.14; g.beginPath(); g.arc(mx, MAG_Y + 14, 22 + i * 12 + (t * 20) % 12, 0.25, Math.PI - 0.25); g.stroke(); } g.globalAlpha = 1; }
       items.forEach((it) => { shape(g, it); if (it !== held && !it.inBin) text(g, it.n, it.x, GROUND + 24, 15, C.ink2); });
       if (note) text(g, note, 400, 110, 19, C.ink);
     });

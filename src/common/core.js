@@ -5,7 +5,11 @@ window.Lesson = (function () {
   const T = window.THREE;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 움직임 줄이기: 기기 설정(prefers-reduced-motion) 또는 화면의 «움직임 멈추기» 단추. 단원 코드는 L.reduce 로 매번 읽는다
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let still = false;
+  try { still = window.localStorage.getItem('lesson:still') === '1'; } catch (e) { still = false; }
+  const calm = () => motionQuery.matches || still;
   const rootCss = getComputedStyle(document.documentElement);
   const tok = (k) => rootCss.getPropertyValue('--' + k).trim();
   const DEG = Math.PI / 180;
@@ -225,7 +229,7 @@ window.Lesson = (function () {
       veil.innerHTML = '<p>먼저 예상해 보세요</p><span>«예상해 보기»에서 하나를 골라요</span><button type="button" class="skip">예상 없이 해 보기</button>';
       stage.appendChild(veil);
       // 좁은 화면에서는 예상하기가 아래에 있으니 가림막을 누르면 그리로 데려간다
-      veil.addEventListener('click', (e) => { if (!e.target.closest('.skip')) pr.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); });
+      veil.addEventListener('click', (e) => { if (!e.target.closest('.skip')) pr.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'center' }); });
     }
     const pick = (v) => {
       pr.dataset.picked = v;
@@ -264,8 +268,8 @@ window.Lesson = (function () {
     try { window.localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) { /* 이 기기에만 못 남김 */ }
     paintStamp(slide);
     const ch = $('.challenge', slide);
-    if (ch && !reduce) { ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); }
-    if (ch) ch.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });   // 오른쪽 칸 아래에 있어도 도장이 보이게
+    if (ch && !calm()) { ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); }
+    if (ch) ch.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'nearest' });   // 오른쪽 칸 아래에 있어도 도장이 보이게
   }
   function clearStamps() {
     stamps = {};
@@ -303,13 +307,13 @@ window.Lesson = (function () {
       btn.textContent = '■ 멈추기'; btn.setAttribute('aria-pressed', 'true');
       say.hidden = false;
       const alive = () => { if (id !== run) throw new Error('stop'); };
-      const wait = (ms) => new Promise((ok, no) => setTimeout(() => (id === run ? ok() : no(new Error('stop'))), reduce ? Math.min(ms, 300) : ms));
+      const wait = (ms) => new Promise((ok, no) => setTimeout(() => (id === run ? ok() : no(new Error('stop'))), ms));
       const d = {
         wait,
         press(el) { alive(); if (el && !el.disabled) el.click(); },
         async slide(el, to, ms) {
           alive();
-          const from = +el.value, n = reduce ? 1 : Math.max(1, Math.round((ms || 1500) / 40));
+          const from = +el.value, n = calm() ? 1 : Math.max(1, Math.round((ms || 1500) / 40));
           for (let i = 1; i <= n; i++) {
             el.value = from + (to - from) * i / n;
             el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -358,6 +362,61 @@ window.Lesson = (function () {
         score.textContent = doneN < items.length ? doneN + '문제 풀었어요.' : '처음에 맞힌 문제: ' + right + ' / ' + items.length;
       }));
     });
+  }
+
+  /* ---------- 핵심 낱말 ----------
+     장의 .head 에 <div class="words"><button type="button" class="word" data-def="뜻">낱말</button>…</div>.
+     누르면 뜻이 말풍선으로 뜬다. 모든 장의 낱말을 모아 «낱말 모음»을 만든다. */
+  function words(slides, go) {
+    $$('.words').forEach((box) => {
+      const tip = document.createElement('p');
+      tip.className = 'worddef'; tip.hidden = true; tip.setAttribute('role', 'status');
+      box.appendChild(tip);
+      $$('.word', box).forEach((w) => {
+        w.setAttribute('aria-expanded', 'false');
+        w.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = w.getAttribute('aria-expanded') !== 'true';
+          $$('.word', box).forEach((x) => x.setAttribute('aria-expanded', 'false'));
+          w.setAttribute('aria-expanded', String(open));
+          tip.hidden = !open;
+          if (open) { tip.textContent = w.textContent.trim() + ': ' + w.dataset.def; tip.style.left = Math.max(0, w.offsetLeft) + 'px'; }
+        });
+      });
+    });
+    document.addEventListener('click', () => {
+      $$('.worddef').forEach((t) => { t.hidden = true; });
+      $$('.word').forEach((w) => w.setAttribute('aria-expanded', 'false'));
+    });
+
+    const btn = $('#glossBtn');
+    if (!btn) return;
+    const all = new Map();
+    slides.forEach((s, i) => $$('.word', s).forEach((w) => {
+      const t = w.textContent.trim();
+      if (!all.has(t)) all.set(t, { def: w.dataset.def, at: [] });
+      if (!all.get(t).at.includes(i)) all.get(t).at.push(i);
+    }));
+    if (!all.size) { btn.hidden = true; return; }
+    const esc = (x) => String(x).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]);
+    const panel = document.createElement('div');
+    panel.className = 'gloss'; panel.hidden = true;
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', '낱말 모음');
+    const items = Array.from(all.entries()).sort((a, b) => a[0].localeCompare(b[0], 'ko'));
+    panel.innerHTML = '<div class="gin"><div class="ghead"><h2>낱말 모음</h2><button type="button" class="btn" data-close>닫기</button></div><dl>' +
+      items.map(([t, v]) => '<div class="gitem"><dt>' + esc(t) + '</dt><dd>' + esc(v.def) + '<span class="at">' +
+        v.at.map((i) => '<button type="button" data-go="' + i + '">' + (i + 1) + ' ' + esc(slides[i].dataset.label) + '</button>').join('') + '</span></dd></div>').join('') +
+      '</dl></div>';
+    document.body.appendChild(panel);
+    const close = () => { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.focus(); };
+    btn.setAttribute('aria-expanded', 'false');
+    btn.addEventListener('click', () => { panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); $('[data-close]', panel).focus(); });
+    panel.addEventListener('click', (e) => {
+      if (e.target === panel || e.target.closest('[data-close]')) { close(); return; }
+      const g = e.target.closest('[data-go]');
+      if (g) { close(); go(+g.dataset.go, true); }
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) close(); });
   }
 
   function start(parts) {
@@ -411,6 +470,7 @@ window.Lesson = (function () {
     if (live[n]) live[n].setActive(true);
     if (push) { try { window.location.hash = n; } catch (e) { /* 미리 보기 */ } }
     onGo(n);
+    seen(n);
   }
   prevB.addEventListener('click', () => go(idx - 1, true));
   nextB.addEventListener('click', () => go(idx + 1, true));
@@ -420,6 +480,29 @@ window.Lesson = (function () {
     if (e.key === 'ArrowRight' || e.key === 'PageDown') { go(idx + 1, true); e.preventDefault(); }
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(idx - 1, true); e.preventDefault(); }
   });
+  /* 움직임 멈추기: 이 기기에 기억한다. 계속 도는 그림과 흐르는 점이 멈추고, 바뀐 결과는 그대로 보인다 */
+  const stillBtn = $('#stillBtn');
+  const paintStill = () => {
+    document.body.classList.toggle('still', still);
+    if (stillBtn) { stillBtn.setAttribute('aria-pressed', String(still)); stillBtn.textContent = still ? '움직임 켜기' : '움직임 멈추기'; }
+  };
+  if (stillBtn) stillBtn.addEventListener('click', () => {
+    still = !still;
+    try { window.localStorage.setItem('lesson:still', still ? '1' : '0'); } catch (e) { /* 이번만 */ }
+    paintStill();
+  });
+  paintStill();
+  words(slides, go);
+
+  /* 이어 보기: 마지막으로 본 장을 이 기기에 기억하고, 다음에 처음부터 열면 이어 볼지 묻는다 */
+  const LAST = 'last:' + document.title;
+  let last = '';
+  try { last = window.localStorage.getItem(LAST) || ''; } catch (e) { last = ''; }
+  let resume = null;
+  function seen(n) {                                        // go() 가 장을 넘길 때마다 부른다
+    try { window.localStorage.setItem(LAST, n); } catch (e) { /* 기억 못 함 */ }
+    if (resume && n !== names[0]) { resume.remove(); resume = null; }
+  }
   const fromHash = () => Math.max(0, names.indexOf((window.location.hash || '').slice(1)));
   window.addEventListener('hashchange', () => go(fromHash(), false));
   window.addEventListener('resize', () => { const p = live[names[idx]]; if (p && p.refresh) p.refresh(); });
@@ -429,6 +512,20 @@ window.Lesson = (function () {
     memoBtn.setAttribute('aria-pressed', String(on));
   });
   go(fromHash(), false);
+  if (!window.location.hash && !/[?&]room=/.test(window.location.search) && names.indexOf(last) > 0) {
+    const k = names.indexOf(last);
+    resume = document.createElement('div');
+    resume.className = 'resume'; resume.setAttribute('role', 'status');
+    resume.innerHTML = '<span>지난번에 <b></b>까지 봤어요.</span><button type="button" class="btn go" data-act="go">이어 보기</button><button type="button" class="btn" data-act="no">처음부터</button>';
+    $('b', resume).textContent = (k + 1) + ' ' + slides[k].dataset.label;
+    resume.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-act]');
+      if (!a) return;
+      const r = resume; resume = null; r.remove();
+      if (a.dataset.act === 'go') go(k, true);
+    });
+    $('.app').appendChild(resume);
+  }
 
   /* ---------- 선생님 따라 넘기기 ----------
      진행하는 기기가 지금 장을 공유 저장소에 적고, 다른 기기는 그것을 지켜보다 따라 넘긴다.
@@ -496,5 +593,5 @@ window.Lesson = (function () {
     })();
   }
 
-  return { T, $, $$, reduce, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start };
+  return { T, $, $$, get reduce() { return calm(); }, tok, DEG, clamp, FONT, makeView, label, glowSprite, line, V3, ring, flat, rr, text, josa, plot, series, gridY, todo, ask, ox, stamp, demo, start };
 })();

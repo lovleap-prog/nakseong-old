@@ -69,6 +69,9 @@ const bad = (m) => { problems.push(m); };
         todos.forEach((t) => { const c = t.querySelectorAll('li').length; if (c < 2 || c > 4) res.push(`${n}: 해 볼 일은 2~4개로(지금 ${c}개).`); });
         if (!q('.learn .body')) res.push(`${n}: 알게 된 것(.learn .body)이 없어요.`);
         if (!q('.challenge')) res.push(`${n}: 도전(.challenge)이 없어요.`);
+        const ws = s.querySelectorAll('.head .words .word');
+        if (!ws.length) res.push(`${n}: 핵심 낱말(.head 안 .words .word)이 없어요.`);
+        ws.forEach((w) => { if (!(w.dataset.def || '').trim()) res.push(`${n}: 낱말 «${w.textContent.trim()}»에 뜻(data-def)이 없어요.`); });
         if (!q('.ctrl [data-demo]')) res.push(`${n}: 보여 주기 단추(.ctrl 안 [data-demo])가 없어요.`);
         const pr = q('.predict');
         if (!pr) info.push(`${n}: 예상하기(.predict)가 없어요. 장 안에서 따로 예상을 받는 장(예: 예상 → 확인 표)이 아니면 넣어요.`);
@@ -91,7 +94,7 @@ const bad = (m) => { problems.push(m); };
       }
     });
     if (names.indexOf('check') !== names.length - 1) res.push('마지막 장은 확인(data-name="check")이어야 해요.');
-    ['#steps', '#prev', '#next', '#pos', '#memoBtn', '#leadBtn', '#followBtn', '#roomCode'].forEach((sel) => { if (!document.querySelector(sel)) res.push('틀에 ' + sel + ' 이 없어요(본보기의 header/footer 를 그대로 써요).'); });
+    ['#steps', '#prev', '#next', '#pos', '#memoBtn', '#leadBtn', '#followBtn', '#roomCode', '#glossBtn', '#stillBtn'].forEach((sel) => { if (!document.querySelector(sel)) res.push('틀에 ' + sel + ' 이 없어요(본보기의 header/footer 를 그대로 써요).'); });
     const words = document.querySelector('.app').textContent;
     (avoid || []).forEach((w) => { if (words.includes(w)) res.push(`교과서에 없는 낱말 «${w}»이 화면 글에 있어요(lesson.json avoid).`); });
     if (/TODO|__[A-Z]+__|00~00쪽/.test(words)) res.push('본보기의 빈칸(TODO, 00~00쪽 …)이 남아 있어요.');
@@ -155,6 +158,25 @@ const bad = (m) => { problems.push(m); };
     if (r.no3d) notes.push(`${n}: 이 점검 브라우저에서 입체 화면이 뜨지 않았어요(대체 글이 보임). 화면을 열어 확인해요.`);
     notes.push(`${n}: 단추 ${r.clicks}번 누름 · 해 볼 일 ${r.todo || '없음'} · 오른쪽 글자 수 ${r.sideText}${r.sideText > 520 ? ' (많아요. 줄일 수 있는지 봐요)' : ''}`);
   }
+  /* ---- 공통 기능: 낱말 모음 · 움직임 멈추기 · 이어 보기 ---- */
+  if (await d.locator('#glossBtn').isVisible()) {
+    await d.click('#glossBtn'); await d.waitForTimeout(300);
+    const nItems = await d.locator('.gloss .gitem').count();
+    if (!nItems) bad('낱말 모음이 비어 있어요.');
+    await d.screenshot({ path: path.join(out, 'z-glossary.png') });
+    await d.locator('.gloss [data-go]').first().click(); await d.waitForTimeout(400);
+    if (await d.locator('.gloss').isVisible()) bad('낱말 모음에서 장으로 가도 창이 닫히지 않아요.');
+    notes.push(`낱말 모음: ${nItems}개`);
+  } else notes.push('낱말 모음 단추가 숨어 있어요(낱말이 하나도 없음).');
+  await d.click('#stillBtn');
+  if (!(await d.evaluate(() => document.body.classList.contains('still') && window.Lesson.reduce))) bad('움직임 멈추기를 눌러도 멈춤 상태가 되지 않아요(L.reduce).');
+  await d.click('#stillBtn');
+  await d.click('#steps button:nth-child(3)'); await d.waitForTimeout(300);
+  await d.goto(url); await d.waitForTimeout(700);
+  if (!(await d.locator('.resume').isVisible())) bad('다시 열었을 때 «이어 보기»가 나오지 않아요.');
+  else { await d.screenshot({ path: path.join(out, 'z-resume.png') }); await d.click('.resume [data-act="go"]'); await d.waitForTimeout(300);
+    const at = await d.evaluate(() => document.querySelector('.slide:not([hidden])').dataset.name);
+    if (at !== lint.names[2]) bad(`이어 보기를 눌렀는데 ${lint.names[2]} 이 아니라 ${at} 장이 열렸어요.`); }
   await d.close();
 
   const m = await open({ width: 400, height: 800 }, '휴대폰');

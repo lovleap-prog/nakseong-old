@@ -41,6 +41,8 @@
   <div class="head">
     <p class="kind">체험 1 · 과학 00~00쪽 · 실험 관찰 00~00쪽</p>
     <h2>TODO 교과서 차시 제목(질문 꼴)</h2>
+    <!-- 핵심 낱말: 교과서가 굵게 쓰거나 정의한 용어 1~3개. 뜻은 교과서 문장을 해요체로 -->
+    <div class="words"><button type="button" class="word" data-def="TODO 교과서의 뜻">TODO 낱말</button></div>
     <div class="memo"><b>발문</b>TODO 발문 한두 개 · 실제 실험과 어떻게 이어 쓰는지 · 지도 유의점</div>
   </div>
   <div class="stage">
@@ -86,6 +88,8 @@
   <div class="head">
     <p class="kind">체험 2 · 과학 00~00쪽 · 실험 관찰 00~00쪽</p>
     <h2>TODO 교과서 차시 제목(질문 꼴)</h2>
+    <!-- 핵심 낱말: 교과서가 굵게 쓰거나 정의한 용어 1~3개. 뜻은 교과서 문장을 해요체로 -->
+    <div class="words"><button type="button" class="word" data-def="TODO 교과서의 뜻">TODO 낱말</button></div>
     <div class="memo"><b>발문</b>TODO</div>
   </div>
   <div class="stage">
@@ -150,7 +154,7 @@
 
 <footer class="nav">
   <button type="button" id="prev">← 이전</button>
-  <span id="pos"></span>
+  <span class="tools"><span id="pos"></span><button type="button" class="tool" id="glossBtn">낱말 모음</button><button type="button" class="tool" id="stillBtn" aria-pressed="false">움직임 멈추기</button></span>
   <button type="button" id="next">다음 →</button>
 </footer>
 </div>
